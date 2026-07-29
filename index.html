@@ -32,6 +32,7 @@
   .brand h1 .tld{color:var(--gold)}
   .brand p{margin:3px 0 0;font-size:12px;color:var(--muted);letter-spacing:.3px}
 
+  .head-actions{display:flex;align-items:center;gap:8px;flex:none}
   .menu-wrap{position:relative;flex:none}
   .menubtn{display:flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:12px;background:var(--panel);border:1px solid var(--line);color:var(--text);cursor:pointer;transition:.15s}
   .menubtn:hover{border-color:var(--muted)}
@@ -60,9 +61,10 @@
   .ios-toggle[aria-pressed="true"]{background:var(--accent)}
   .ios-toggle-dot{display:block;width:22px;height:22px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
   .ios-toggle[aria-pressed="true"] .ios-toggle-dot{transform:translateX(18px)}
-  .menu-new{width:100%;background:transparent;border:1px solid var(--line);border-radius:12px;color:var(--text);font:inherit;font-weight:600;font-size:14px;padding:12px;cursor:pointer;transition:.15s}
+  .menu-new{width:100%;display:block;text-align:center;text-decoration:none;background:transparent;border:1px solid var(--line);border-radius:12px;color:var(--text);font:inherit;font-weight:600;font-size:14px;padding:12px;cursor:pointer;transition:.15s;box-sizing:border-box}
   .menu-new+.menu-new{margin-top:8px}
   .menu-new:hover{border-color:var(--accent);color:var(--accent)}
+  .menu-note{font-size:12px;color:var(--muted);text-align:center;line-height:1.5;margin:14px 4px 10px}
 
   .gamename{width:100%;margin:14px 0 10px;background:transparent;border:none;color:var(--text);font-family:var(--font-display);font-weight:600;font-size:clamp(28px,7vw,42px);letter-spacing:-1px;padding:2px 0;border-bottom:2px dashed transparent;transition:.15s}
   .gamename::placeholder{color:var(--muted);opacity:.6}
@@ -282,22 +284,24 @@
       <svg class="mark" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="40" height="40" rx="10" fill="#f4b942"/><g stroke="#1a1226" stroke-width="3" stroke-linecap="round" fill="none"><line x1="11" y1="10" x2="11" y2="30"/><line x1="17" y1="10" x2="17" y2="30"/><line x1="23" y1="10" x2="23" y2="30"/><line x1="29" y1="10" x2="29" y2="30"/><line x1="7" y1="32" x2="33" y2="8"/></g></svg>
       <div><h1>Scorepad<span class="tld">.uk</span></h1><p>Keep score for game night</p></div>
     </div>
-    <div class="menu-wrap">
-      <button class="menubtn" id="menubtn" aria-label="Open menu" aria-haspopup="true" aria-expanded="false">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h11M4 12h16M9 18h11"/><circle cx="18" cy="6" r="2" fill="currentColor" stroke="none"/><circle cx="5" cy="12" r="2" fill="currentColor" stroke="none"/><circle cx="15" cy="18" r="2" fill="currentColor" stroke="none"/></svg>
+    <div class="head-actions">
+      <button class="menubtn" id="newgamebtn" aria-label="Start new game" title="Start new game">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
       </button>
-      <div class="menu" id="menu" hidden>
+      <div class="menu-wrap">
+        <button class="menubtn" id="menubtn" aria-label="Open menu" aria-haspopup="true" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h11M4 12h16M9 18h11"/><circle cx="18" cy="6" r="2" fill="currentColor" stroke="none"/><circle cx="5" cy="12" r="2" fill="currentColor" stroke="none"/><circle cx="15" cy="18" r="2" fill="currentColor" stroke="none"/></svg>
+        </button>
+        <div class="menu" id="menu" hidden>
         <div class="menu-sec">
           <div class="menu-h">Scoring style</div>
           <div id="score-mode-list"></div>
         </div>
         <div class="menu-sec">
-          <div class="menu-h">Game mode</div>
+          <div class="menu-h">Game</div>
           <div id="mode-list"></div>
-        </div>
-        <div class="menu-sec">
-          <div class="menu-h">Keypad</div>
-          <div id="keypad-list"></div>
+          <p class="menu-note">More games coming — got one you'd like to see?</p>
+          <a class="menu-new" href="mailto:hello@scorepad.uk?subject=Game%20suggestion&body=Hi!%20I%27d%20love%20to%20see%20___%20added%20to%20Scorepad.%0A%0A">Suggest a game</a>
         </div>
         <div class="menu-sec">
           <button class="menu-new" id="menu-guide">Show guide</button>
@@ -314,6 +318,7 @@
           <div class="menu-h">Theme</div>
           <div class="theme-grid" id="theme-grid"></div>
         </div>
+      </div>
       </div>
     </div>
   </header>
@@ -428,15 +433,10 @@
       sw:["#f7f3e8","#22304e","#c8791f","#b8493c"]}
   };
   var MODES={
-    flip7:{name:"Flip 7",target:"200",note:"First to 200 — highest score wins",keypad:"flip7"},
-    sushigo:{name:"Sushi Go!",target:"",note:"Play 3 rounds — highest total wins",keypad:"sushigo"},
-    free:{name:"Freeplay",target:"",note:"No target — stop whenever you like",keypad:"standard"}
+    standard:{label:"Standard",note:"Just the number pad, no target",target:"",keypad:"standard"},
+    flip7:{label:"Flip 7",name:"Flip 7",target:"200",note:"Play to 200, with the card picker",keypad:"flip7"},
+    sushigo:{label:"Sushi Go!",name:"Sushi Go!",target:"",note:"Three rounds, with the card picker",keypad:"sushigo"}
   };
-  var KEYPAD_OPTS=[
-    {id:"standard",name:"Standard",note:"Just the number pad"},
-    {id:"flip7",name:"Flip 7 card picker",note:"Tap the cards in your hand"},
-    {id:"sushigo",name:"Sushi Go! card picker",note:"Tap the cards in your hand"}
-  ];
   var VARMAP={bg0:"--bg0",bg1:"--bg1",bg2:"--bg2",panel:"--panel",line:"--line",text:"--text",muted:"--muted",paper:"--paper",paper2:"--paper2",paperLine:"--paper-line",ink:"--ink",inkSoft:"--ink-soft",accent:"--accent",accentPress:"--accent-press",gold:"--gold",onGold:"--on-gold"};
 
   var canStore=true;
@@ -505,35 +505,20 @@
     Object.keys(MODES).forEach(function(id){
       var m=MODES[id];
       var b=document.createElement("button");b.className="mode-opt";
-      b.innerHTML="<b>"+esc(m.name)+"</b><small>"+esc(m.note)+"</small>";
+      b.innerHTML="<b>"+esc(m.label)+"</b><small>"+esc(m.note)+"</small>";
       b.addEventListener("click",function(){selectMode(id);});
       l.appendChild(b);
     });
   }
   function selectMode(id){
     var m=MODES[id];if(!m)return;
-    if(id!=="free"){state.gameName=m.name;gameNameEl.value=m.name;}
-    state.targetScore=m.target;targetEl.value=m.target;
-    if(m.keypad)state.keypadType=m.keypad;
-    save();refreshDynamic();syncKeypadMenu();closeMenu();
-  }
-  function buildKeypadMenu(){
-    var l=document.getElementById("keypad-list");l.innerHTML="";
-    KEYPAD_OPTS.forEach(function(k){
-      var b=document.createElement("button");b.className="mode-opt";b.setAttribute("data-keypad",k.id);
-      b.innerHTML="<b>"+esc(k.name)+"</b><small>"+esc(k.note)+"</small>";
-      b.addEventListener("click",function(){applyKeypadType(k.id);});
-      l.appendChild(b);
-    });
-  }
-  function applyKeypadType(id){
-    if(["standard","flip7","sushigo"].indexOf(id)<0)id="standard";
-    state.keypadType=id;save();syncKeypadMenu();
-  }
-  function syncKeypadMenu(){
-    document.querySelectorAll("[data-keypad]").forEach(function(b){
-      if(b.tagName==="BUTTON")b.classList.toggle("on",b.getAttribute("data-keypad")===state.keypadType);
-    });
+    if(m.name&&!(state.gameName||"").trim()){
+      state.gameName=m.name;gameNameEl.value=m.name;
+    }
+    state.targetScore=m.target||"";
+    targetEl.value=state.targetScore;
+    state.keypadType=m.keypad||"standard";
+    save();refreshDynamic();closeMenu();
   }
 
   function buildScoreModeMenu(){
@@ -624,10 +609,12 @@
   }
   function closePicker(){if(cpick)cpick.hidden=true;}
   window.addEventListener("resize",closePicker);
-  document.getElementById("menu-new").addEventListener("click",function(){
+  function startNewGame(){
     if(state.rounds.length&&!confirm("Start a new game? This clears all rounds but keeps your players."))return;
-    state.rounds=[];save();renderAll();closeMenu();
-  });
+    state.rounds=[];save();renderAll();
+  }
+  document.getElementById("menu-new").addEventListener("click",function(){startNewGame();closeMenu();});
+  document.getElementById("newgamebtn").addEventListener("click",startNewGame);
 
   // ---- welcome guide ----
   var guideOverlay=document.getElementById("guide-overlay");
@@ -1028,7 +1015,7 @@
   function ordinal(n){if(!n)return"—";var s=["th","st","nd","rd"],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}
   function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
 
-  buildThemeMenu();buildModeMenu();buildScoreModeMenu();buildKeypadMenu();applyTheme(currentTheme);applyScoreMode(state.scoreMode);syncKeypadMenu();renderAll();
+  buildThemeMenu();buildModeMenu();buildScoreModeMenu();applyTheme(currentTheme);applyScoreMode(state.scoreMode);renderAll();
   if(!state.seenGuide)openGuide();
 })();
 </script>
