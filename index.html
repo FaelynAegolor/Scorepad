@@ -49,6 +49,7 @@
   .theme-name{font:inherit;font-size:12px;font-weight:600;color:var(--text)}
   .mode-opt{width:100%;display:block;text-align:left;background:transparent;border:1px solid var(--line);border-radius:12px;padding:11px 13px;cursor:pointer;margin-bottom:8px;transition:.15s}
   .mode-opt:hover{border-color:var(--muted)}
+  .mode-opt.on{border-color:var(--gold);background:color-mix(in srgb,var(--gold) 8%,transparent)}
   .mode-opt b{display:block;font:inherit;font-weight:600;font-size:14px;color:var(--text)}
   .mode-opt small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
   .score-toggle-row{display:flex;align-items:center;gap:12px;padding:11px 13px;border:1px solid var(--line);border-radius:12px}
@@ -160,6 +161,43 @@
   .kp-current span{font-family:var(--font-mono);color:var(--text);font-weight:700;margin-left:4px;font-variant-numeric:tabular-nums;text-transform:none;letter-spacing:0}
   .kp-display{background:color-mix(in srgb,var(--text) 8%,transparent);border-radius:12px;padding:14px;text-align:center;font-family:var(--font-mono);font-weight:700;font-size:36px;color:var(--text);margin-bottom:12px;font-variant-numeric:tabular-nums;line-height:1}
   .kp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+  .kp-numeric[hidden]{display:none}
+  .kp-picker[hidden]{display:none}
+  .kp-picker{margin-bottom:12px}
+  .pk-section{margin-bottom:12px}
+  .pk-lab{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;text-align:center}
+  .pk-num-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+  .pk-mod-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+  .pk-num,.pk-mod{padding:9px 0;border:1px solid var(--line);background:transparent;color:var(--text);border-radius:8px;font:inherit;font-weight:700;font-size:14px;cursor:pointer;transition:.1s;font-variant-numeric:tabular-nums;line-height:1}
+  .pk-num:hover,.pk-mod:hover{border-color:var(--muted)}
+  .pk-num.on,.pk-mod.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .pk-mod[data-m="x2"].on{background:var(--gold);border-color:var(--gold);color:var(--on-gold)}
+  .pk-tile-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .pk-tile{position:relative;padding:9px 6px 8px;border:1.5px solid var(--line);background:transparent;color:var(--text);border-radius:10px;text-align:center;cursor:pointer;transition:.1s;display:flex;flex-direction:column;align-items:center;gap:1px;min-height:74px;font:inherit}
+  .pk-tile:hover{border-color:var(--muted)}
+  .pk-tile.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
+  .pk-tile:active{transform:scale(.96)}
+  .pk-tile-name{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;line-height:1.15}
+  .pk-tile-val{font-size:10px;color:var(--muted);font-family:var(--font-mono);font-weight:700;line-height:1.15}
+  .pk-tile-count{font-family:var(--font-mono);font-weight:700;font-size:20px;color:var(--accent);margin-top:auto;padding-top:4px;line-height:1;font-variant-numeric:tabular-nums}
+  .pk-tile:not(.on) .pk-tile-count{color:var(--muted);opacity:.4}
+  .pk-tile-clear{position:absolute;top:3px;right:3px;width:22px;height:22px;background:color-mix(in srgb,var(--text) 14%,transparent);color:var(--text);border-radius:50%;font-size:13px;line-height:1;cursor:pointer;display:none;align-items:center;justify-content:center;padding:0;font-weight:700}
+  .pk-tile.on .pk-tile-clear{display:flex}
+  .pk-tile-clear:hover{background:#ef4444;color:#fff}
+  .pk-choice{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+  .pk-choice button{padding:9px 4px;border:1px solid var(--line);background:transparent;color:var(--text);border-radius:8px;font:inherit;font-weight:600;font-size:12px;cursor:pointer;transition:.1s;line-height:1.15}
+  .pk-choice button:hover{border-color:var(--muted)}
+  .pk-choice button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .pk-summary{background:color-mix(in srgb,var(--gold) 12%,transparent);border:1px solid color-mix(in srgb,var(--gold) 35%,transparent);border-radius:10px;padding:10px 12px;text-align:center;margin-bottom:10px}
+  .pk-summary-lab{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+  .pk-total{font-family:var(--font-mono);font-weight:700;font-size:30px;color:var(--gold);font-variant-numeric:tabular-nums;line-height:1}
+  .pk-note{font-size:10px;color:var(--muted);margin-top:4px;letter-spacing:.5px;min-height:14px}
+  .pk-actions{display:grid;grid-template-columns:1fr 2fr;gap:8px;margin-bottom:8px}
+  .pk-bust{padding:12px 4px;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:10px;font:inherit;font-weight:700;font-size:13px;cursor:pointer;transition:.1s}
+  .pk-bust:hover{border-color:var(--accent);color:var(--accent)}
+  .pk-add{padding:12px;border:none;background:var(--accent);color:#fff;border-radius:10px;font:inherit;font-weight:700;font-size:14px;cursor:pointer;transition:.1s}
+  .pk-add:hover{background:var(--accent-press)}
+  .pk-add:disabled{opacity:.5;cursor:not-allowed}
   .kpk{padding:14px 0;border:1px solid var(--line);background:transparent;color:var(--text);border-radius:11px;font:inherit;font-weight:700;font-size:20px;cursor:pointer;transition:.1s;font-variant-numeric:tabular-nums}
   .kpk:hover{background:color-mix(in srgb,var(--text) 6%,transparent);border-color:var(--muted)}
   .kpk:active{transform:scale(.96)}
@@ -245,6 +283,10 @@
           <div id="mode-list"></div>
         </div>
         <div class="menu-sec">
+          <div class="menu-h">Keypad</div>
+          <div id="keypad-list"></div>
+        </div>
+        <div class="menu-sec">
           <button class="menu-new" id="menu-guide">Show guide</button>
           <button class="menu-new" id="menu-new">Start new game</button>
         </div>
@@ -318,6 +360,8 @@
     <div class="kp-eyebrow">Adjust score</div>
     <div class="kp-name" id="kp-name">—</div>
     <div class="kp-current">current <span id="kp-current">0</span></div>
+    <div class="kp-picker" id="kp-picker" hidden></div>
+    <div class="kp-numeric" id="kp-numeric">
     <div class="kp-display" id="kp-display">0</div>
     <div class="kp-grid">
       <button class="kpk" data-num="7">7</button>
@@ -336,6 +380,7 @@
     <div class="kp-actions">
       <button class="kpa kpa-minus" id="kp-minus">− Subtract</button>
       <button class="kpa kpa-plus" id="kp-plus">Add +</button>
+    </div>
     </div>
   </div>
 </div>
@@ -365,17 +410,22 @@
       sw:["#f7f3e8","#22304e","#c8791f","#b8493c"]}
   };
   var MODES={
-    flip7:{name:"Flip 7",target:"200",note:"First to 200 — highest score wins"},
-    sushigo:{name:"Sushi Go!",target:"",note:"Play 3 rounds — highest total wins"},
-    free:{name:"Freeplay",target:"",note:"No target — stop whenever you like"}
+    flip7:{name:"Flip 7",target:"200",note:"First to 200 — highest score wins",keypad:"flip7"},
+    sushigo:{name:"Sushi Go!",target:"",note:"Play 3 rounds — highest total wins",keypad:"sushigo"},
+    free:{name:"Freeplay",target:"",note:"No target — stop whenever you like",keypad:"standard"}
   };
+  var KEYPAD_OPTS=[
+    {id:"standard",name:"Standard",note:"Just the number pad"},
+    {id:"flip7",name:"Flip 7 card picker",note:"Tap the cards in your hand"},
+    {id:"sushigo",name:"Sushi Go! card picker",note:"Tap the cards in your hand"}
+  ];
   var VARMAP={bg0:"--bg0",bg1:"--bg1",bg2:"--bg2",panel:"--panel",line:"--line",text:"--text",muted:"--muted",paper:"--paper",paper2:"--paper2",paperLine:"--paper-line",ink:"--ink",inkSoft:"--ink-soft",accent:"--accent",accentPress:"--accent-press",gold:"--gold",onGold:"--on-gold"};
 
   var canStore=true;
   try{localStorage.setItem("__t","1");localStorage.removeItem("__t");}
   catch(e){canStore=false;document.getElementById("warn").style.display="block";}
 
-  var state=load()||{gameName:"",players:[mk("Player 1"),mk("Player 2")],rounds:[],targetScore:"",theme:"felt",scoreMode:"running"};
+  var state=load()||{gameName:"",players:[mk("Player 1"),mk("Player 2")],rounds:[],targetScore:"",theme:"felt",scoreMode:"running",keypadType:"standard"};
   ensureShape(state);
   var currentTheme=state.theme||"felt";
 
@@ -385,6 +435,7 @@
     s.gameName=s.gameName||"";s.players=s.players||[];s.rounds=s.rounds||[];
     if(s.targetScore===undefined)s.targetScore="";if(!s.theme||!THEMES[s.theme])s.theme="felt";
     if(s.scoreMode!=="rounds")s.scoreMode="running";
+    if(["standard","flip7","sushigo"].indexOf(s.keypadType)<0)s.keypadType="standard";
     var used=s.players.map(function(p){return p.color;}).filter(Boolean);
     s.players.forEach(function(p){if(!p.color){var c=PALETTE.filter(function(x){return used.indexOf(x)<0;})[0]||PALETTE[used.length%PALETTE.length];p.color=c;used.push(c);}});
   }
@@ -445,7 +496,26 @@
     var m=MODES[id];if(!m)return;
     if(id!=="free"){state.gameName=m.name;gameNameEl.value=m.name;}
     state.targetScore=m.target;targetEl.value=m.target;
-    save();refreshDynamic();closeMenu();
+    if(m.keypad)state.keypadType=m.keypad;
+    save();refreshDynamic();syncKeypadMenu();closeMenu();
+  }
+  function buildKeypadMenu(){
+    var l=document.getElementById("keypad-list");l.innerHTML="";
+    KEYPAD_OPTS.forEach(function(k){
+      var b=document.createElement("button");b.className="mode-opt";b.setAttribute("data-keypad",k.id);
+      b.innerHTML="<b>"+esc(k.name)+"</b><small>"+esc(k.note)+"</small>";
+      b.addEventListener("click",function(){applyKeypadType(k.id);});
+      l.appendChild(b);
+    });
+  }
+  function applyKeypadType(id){
+    if(["standard","flip7","sushigo"].indexOf(id)<0)id="standard";
+    state.keypadType=id;save();syncKeypadMenu();
+  }
+  function syncKeypadMenu(){
+    document.querySelectorAll("[data-keypad]").forEach(function(b){
+      if(b.tagName==="BUTTON")b.classList.toggle("on",b.getAttribute("data-keypad")===state.keypadType);
+    });
   }
 
   function buildScoreModeMenu(){
@@ -559,7 +629,152 @@
     document.getElementById("kp-name").textContent=pl.name||"—";
     document.getElementById("kp-name").style.color=pl.color;
     document.getElementById("kp-current").textContent=totalFor(playerId);
+    buildPicker();
     updateKpDisplay();kpOverlay.hidden=false;
+  }
+  var pickerState={flip7:null,sushigo:null};
+  function resetPickerState(){
+    pickerState.flip7={numbers:{},modifiers:{}};
+    pickerState.sushigo={squid:0,salmon:0,egg:0,wsquid:0,wsalmon:0,wegg:0,tempura:0,sashimi:0,dumplings:0,maki:0,pudding:0};
+  }
+  function buildPicker(){
+    var pk=document.getElementById("kp-picker"),num=document.getElementById("kp-numeric");
+    resetPickerState();
+    if(state.keypadType==="flip7"){pk.hidden=false;num.hidden=true;pk.innerHTML=flip7HTML();attachFlip7();updateFlip7();}
+    else if(state.keypadType==="sushigo"){pk.hidden=false;num.hidden=true;pk.innerHTML=sushigoHTML();attachSushigo();updateSushigo();}
+    else{pk.hidden=true;num.hidden=false;}
+  }
+  function flip7HTML(){
+    var nums="";for(var i=0;i<=12;i++)nums+='<button class="pk-num" data-n="'+i+'">'+i+'</button>';
+    var mods="";[["2","+2"],["4","+4"],["6","+6"],["8","+8"],["10","+10"],["x2","×2"]].forEach(function(p){
+      mods+='<button class="pk-mod" data-m="'+p[0]+'">'+p[1]+'</button>';
+    });
+    return '<div class="pk-section"><div class="pk-lab">Number cards (tap the ones you flipped)</div><div class="pk-num-grid">'+nums+'</div></div>'+
+      '<div class="pk-section"><div class="pk-lab">Modifiers</div><div class="pk-mod-grid">'+mods+'</div></div>'+
+      '<div class="pk-summary"><div class="pk-summary-lab">Round total</div><div class="pk-total" id="pk-total">0</div><div class="pk-note" id="pk-note">&nbsp;</div></div>'+
+      '<div class="pk-actions"><button class="pk-bust" id="pk-bust">Bust</button><button class="pk-add" id="pk-add">Add to score</button></div>';
+  }
+  function attachFlip7(){
+    document.querySelectorAll(".pk-num").forEach(function(b){
+      b.addEventListener("click",function(){
+        var n=b.getAttribute("data-n"),s=pickerState.flip7.numbers;
+        if(s[n])delete s[n];else s[n]=true;
+        b.classList.toggle("on",!!s[n]);updateFlip7();
+      });
+    });
+    document.querySelectorAll(".pk-mod").forEach(function(b){
+      b.addEventListener("click",function(){
+        var m=b.getAttribute("data-m"),s=pickerState.flip7.modifiers;
+        if(s[m])delete s[m];else s[m]=true;
+        b.classList.toggle("on",!!s[m]);updateFlip7();
+      });
+    });
+    document.getElementById("pk-bust").addEventListener("click",function(){closeKeypad();});
+    document.getElementById("pk-add").addEventListener("click",function(){
+      var t=calcFlip7();addAdjustment(kpState.playerId,t);closeKeypad();
+    });
+  }
+  function calcFlip7(){
+    var s=pickerState.flip7,nums=0,keys=Object.keys(s.numbers);
+    keys.forEach(function(k){nums+=parseInt(k,10);});
+    if(s.modifiers["x2"])nums*=2;
+    ["2","4","6","8","10"].forEach(function(m){if(s.modifiers[m])nums+=parseInt(m,10);});
+    if(keys.length===7)nums+=15;
+    return nums;
+  }
+  function updateFlip7(){
+    var t=calcFlip7(),notes=[],s=pickerState.flip7;
+    if(Object.keys(s.numbers).length===7)notes.push("Flip 7 bonus +15");
+    if(s.modifiers["x2"])notes.push("×2 applied to cards");
+    document.getElementById("pk-total").textContent=t;
+    document.getElementById("pk-note").innerHTML=notes.length?notes.join(" · "):"&nbsp;";
+    var add=document.getElementById("pk-add");
+    add.disabled=(Object.keys(s.numbers).length===0&&Object.keys(s.modifiers).length===0);
+  }
+  function sushigoHTML(){
+    var nigiri=[
+      {id:"squid",name:"Squid",val:"×3"},
+      {id:"salmon",name:"Salmon",val:"×2"},
+      {id:"egg",name:"Egg",val:"×1"},
+      {id:"wsquid",name:"Squid + W",val:"×9"},
+      {id:"wsalmon",name:"Salmon + W",val:"×6"},
+      {id:"wegg",name:"Egg + W",val:"×3"}
+    ];
+    var others=[
+      {id:"tempura",name:"Tempura",val:"pair = 5"},
+      {id:"sashimi",name:"Sashimi",val:"set = 10"},
+      {id:"dumplings",name:"Dumplings",val:"1/3/6/10/15"}
+    ];
+    function tile(o){
+      return '<div class="pk-tile" data-tile="'+o.id+'" role="button" tabindex="0" aria-label="Add one '+esc(o.name)+'">'+
+        '<span class="pk-tile-clear" data-clear="'+o.id+'" aria-label="Reset '+esc(o.name)+'">×</span>'+
+        '<span class="pk-tile-name">'+esc(o.name)+'</span>'+
+        '<span class="pk-tile-val">'+esc(o.val)+'</span>'+
+        '<span class="pk-tile-count" id="pk-cnt-'+o.id+'">0</span>'+
+      '</div>';
+    }
+    return '<div class="pk-section"><div class="pk-lab">Nigiri — tap to add</div><div class="pk-tile-grid">'+nigiri.map(tile).join("")+'</div></div>'+
+      '<div class="pk-section"><div class="pk-lab">Other cards</div><div class="pk-tile-grid">'+others.map(tile).join("")+'</div></div>'+
+      '<div class="pk-section"><div class="pk-lab">Maki rolls</div><div class="pk-choice">'+
+        '<button data-maki="0" class="on">None</button><button data-maki="3">2nd +3</button><button data-maki="6">1st +6</button>'+
+      '</div></div>'+
+      '<div class="pk-section"><div class="pk-lab">Pudding (endgame only)</div><div class="pk-choice">'+
+        '<button data-pudding="-6">Fewest −6</button><button data-pudding="0" class="on">None</button><button data-pudding="6">Most +6</button>'+
+      '</div></div>'+
+      '<div class="pk-summary"><div class="pk-summary-lab">Round total</div><div class="pk-total" id="pk-total">0</div><div class="pk-note" id="pk-note">&nbsp;</div></div>'+
+      '<div class="pk-actions" style="grid-template-columns:1fr"><button class="pk-add" id="pk-add">Add to score</button></div>';
+  }
+  function attachSushigo(){
+    document.querySelectorAll(".pk-tile").forEach(function(t){
+      t.addEventListener("click",function(e){
+        var id=t.getAttribute("data-tile");
+        if(e.target.closest(".pk-tile-clear")){
+          pickerState.sushigo[id]=0;
+        } else {
+          pickerState.sushigo[id]+=1;
+        }
+        updateSushigoTile(id);updateSushigo();
+      });
+    });
+    document.querySelectorAll("[data-maki]").forEach(function(b){
+      b.addEventListener("click",function(){
+        pickerState.sushigo.maki=parseInt(b.getAttribute("data-maki"),10);
+        document.querySelectorAll("[data-maki]").forEach(function(x){x.classList.remove("on");});
+        b.classList.add("on");updateSushigo();
+      });
+    });
+    document.querySelectorAll("[data-pudding]").forEach(function(b){
+      b.addEventListener("click",function(){
+        pickerState.sushigo.pudding=parseInt(b.getAttribute("data-pudding"),10);
+        document.querySelectorAll("[data-pudding]").forEach(function(x){x.classList.remove("on");});
+        b.classList.add("on");updateSushigo();
+      });
+    });
+    document.getElementById("pk-add").addEventListener("click",function(){
+      var t=calcSushigo();addAdjustment(kpState.playerId,t);closeKeypad();
+    });
+  }
+  function updateSushigoTile(id){
+    var cnt=document.getElementById("pk-cnt-"+id);
+    if(cnt)cnt.textContent=pickerState.sushigo[id];
+    var tile=document.querySelector('[data-tile="'+id+'"]');
+    if(tile)tile.classList.toggle("on",pickerState.sushigo[id]>0);
+  }
+  function calcSushigo(){
+    var c=pickerState.sushigo,t=0;
+    t+=c.squid*3+c.salmon*2+c.egg*1+c.wsquid*9+c.wsalmon*6+c.wegg*3;
+    t+=Math.floor(c.tempura/2)*5;
+    t+=Math.floor(c.sashimi/3)*10;
+    var d=c.dumplings;t+=d>=5?15:(d===0?0:[0,1,3,6,10][d]);
+    t+=c.maki+c.pudding;
+    return t;
+  }
+  function updateSushigo(){
+    var t=calcSushigo(),c=pickerState.sushigo,notes=[];
+    if(c.tempura>=2)notes.push(Math.floor(c.tempura/2)+" tempura pair"+(Math.floor(c.tempura/2)>1?"s":""));
+    if(c.sashimi>=3)notes.push(Math.floor(c.sashimi/3)+" sashimi set"+(Math.floor(c.sashimi/3)>1?"s":""));
+    document.getElementById("pk-total").textContent=t;
+    document.getElementById("pk-note").innerHTML=notes.length?notes.join(" · "):"&nbsp;";
   }
   function closeKeypad(){kpOverlay.hidden=true;kpState.playerId=null;kpState.value="";}
   function updateKpDisplay(){document.getElementById("kp-display").textContent=kpState.value||"0";}
@@ -751,7 +966,7 @@
   function ordinal(n){if(!n)return"—";var s=["th","st","nd","rd"],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}
   function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
 
-  buildThemeMenu();buildModeMenu();buildScoreModeMenu();applyTheme(currentTheme);applyScoreMode(state.scoreMode);renderAll();
+  buildThemeMenu();buildModeMenu();buildScoreModeMenu();buildKeypadMenu();applyTheme(currentTheme);applyScoreMode(state.scoreMode);syncKeypadMenu();renderAll();
   if(!state.seenGuide)openGuide();
 })();
 </script>
