@@ -144,7 +144,6 @@
 
   /* running-score mode */
   body[data-scoremode="running"] #sheet-block{display:none}
-  body[data-scoremode="rounds"] #running-block{display:none}
   .adjbtn{width:36px;height:36px;padding:0;border:1.5px solid var(--line);background:transparent;color:var(--text);border-radius:10px;font:inherit;font-weight:700;font-size:20px;cursor:pointer;transition:.12s;line-height:1;flex:none;display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
   .adjbtn:hover{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,transparent)}
   .adjbtn:active{transform:scale(.9)}
@@ -347,7 +346,6 @@
   </div>
 
   <div class="running-block" id="running-block">
-    <div class="section-label">Recent activity</div>
     <button class="undo-btn" id="undo-btn">Nothing to undo</button>
   </div>
 
@@ -549,6 +547,23 @@
 
   var tickers={};
   function addAdjustment(playerId,delta){
+    pendingRestore=null;
+    if(state.scoreMode==="rounds"){
+      // Rounds mode: update the last existing round. Do NOT create a new one.
+      if(!state.rounds.length)return;
+      var lastR=state.rounds[state.rounds.length-1];
+      var prev=lastR.scores[playerId];
+      var prevN=(typeof prev==="number"&&!isNaN(prev))?prev:0;
+      var next=prevN+delta;
+      if(next===0)delete lastR.scores[playerId];
+      else lastR.scores[playerId]=next;
+      save();
+      updateTicker(playerId,delta);
+      var input=sheetEl.querySelector('.scoreinput[data-r="'+lastR.id+'"][data-p="'+playerId+'"]');
+      if(input)input.value=lastR.scores[playerId]!==undefined?lastR.scores[playerId]:"";
+      refreshDynamic();
+      return;
+    }
     var now=Date.now();
     var t=tickers[playerId];
     var withinWindow=t&&(now-t.lastTime)<2000;
@@ -563,7 +578,6 @@
     }
     save();
     updateTicker(playerId,delta);
-    if(state.scoreMode==="rounds")renderSheet();
     refreshDynamic();
   }
   function updateTicker(playerId,delta){
@@ -615,9 +629,13 @@
   }
   function closePicker(){if(cpick)cpick.hidden=true;}
   window.addEventListener("resize",closePicker);
+  // ---- undo state (player restore takes precedence over round undo) ----
+  var pendingRestore=null; // { player, index, scores }
+  function clearPendingRestore(){if(pendingRestore){pendingRestore=null;refreshDynamic();}}
+
   function startNewGame(){
     if(state.rounds.length&&!confirm("Start a new game? This clears all rounds but keeps your players."))return;
-    state.rounds=[];save();renderAll();
+    state.rounds=[];save();renderAll();clearPendingRestore();
   }
   document.getElementById("menu-new").addEventListener("click",function(){startNewGame();closeMenu();});
   document.getElementById("newgamebtn").addEventListener("click",startNewGame);
@@ -636,6 +654,7 @@
     save();
     gameNameEl.value="";targetEl.value="";
     applyScoreMode("running");
+    pendingRestore=null;
     renderAll();
     closeMenu();
   });
@@ -831,11 +850,21 @@
 
   // ---- undo ----
   document.getElementById("undo-btn").addEventListener("click",function(){
+    if(pendingRestore){
+      state.players.splice(pendingRestore.index,0,pendingRestore.player);
+      state.rounds.forEach(function(r){if(pendingRestore.scores[r.id]!==undefined)r.scores[pendingRestore.player.id]=pendingRestore.scores[r.id];});
+      pendingRestore=null;save();renderAll();return;
+    }
     if(!state.rounds.length)return;
     state.rounds.pop();save();renderAll();
   });
   function updateUndoBtn(){
     var btn=document.getElementById("undo-btn");
+    if(pendingRestore){
+      btn.disabled=false;
+      btn.textContent="Restore "+(pendingRestore.player.name||"player");
+      return;
+    }
     if(!state.rounds.length){btn.disabled=true;btn.textContent="Nothing to undo";return;}
     var last=state.rounds[state.rounds.length-1];
     var pids=Object.keys(last.scores);
@@ -862,11 +891,13 @@
       card.querySelector(".pname").addEventListener("input",function(e){pl.name=e.target.value;var h=sheetEl.querySelector('[data-head="'+pl.id+'"] .htext');if(h)h.textContent=e.target.value||"—";save();});
       card.querySelector(".pdot").addEventListener("click",function(e){e.stopPropagation();openColorPicker(pl,e.currentTarget);});
       card.querySelector(".remove").addEventListener("click",function(){
-        var who=pl.name||"this player";
-        var msg=state.rounds.length?"Remove "+who+" and their scores?":"Remove "+who+"?";
-        if(!confirm(msg))return;
+        var idx=state.players.indexOf(pl);
+        var savedScores={};
+        state.rounds.forEach(function(r){if(r.scores[pl.id]!==undefined)savedScores[r.id]=r.scores[pl.id];});
+        pendingRestore={player:pl,index:idx,scores:savedScores};
         state.players=state.players.filter(function(x){return x.id!==pl.id;});
-        state.rounds.forEach(function(r){delete r.scores[pl.id];});save();renderAll();
+        state.rounds.forEach(function(r){delete r.scores[pl.id];});
+        save();renderAll();
       });
       card.querySelector(".plus").addEventListener("click",function(){addAdjustment(pl.id,1);});
       card.querySelector(".minus").addEventListener("click",function(){addAdjustment(pl.id,-1);});
@@ -925,6 +956,7 @@
 
   document.getElementById("addround").addEventListener("click",function(){
     if(!state.players.length){alert("Add at least one player first.");return;}
+    pendingRestore=null;
     state.rounds.push({id:uid(),scores:{}});save();renderSheet();refreshDynamic();
     var rows=sheetEl.querySelectorAll("tbody tr");var last=rows[rows.length-1];if(last){var f=last.querySelector(".scoreinput");if(f)f.focus();}
   });
