@@ -65,6 +65,8 @@
   .menu-new+.menu-new{margin-top:8px}
   .menu-new:hover{border-color:var(--accent);color:var(--accent)}
   .menu-note{font-size:12px;color:var(--muted);text-align:center;line-height:1.5;margin:14px 4px 10px}
+  .menu-reset{color:#ef4444;border-color:color-mix(in srgb,#ef4444 35%,var(--line))}
+  .menu-reset:hover{border-color:#ef4444;background:color-mix(in srgb,#ef4444 10%,transparent);color:#ef4444}
 
   .gamename{width:100%;margin:14px 0 10px;background:transparent;border:none;color:var(--text);font-family:var(--font-display);font-weight:600;font-size:clamp(28px,7vw,42px);letter-spacing:-1px;padding:2px 0;border-bottom:2px dashed transparent;transition:.15s}
   .gamename::placeholder{color:var(--muted);opacity:.6}
@@ -317,6 +319,9 @@
         <div class="menu-sec">
           <div class="menu-h">Theme</div>
           <div class="theme-grid" id="theme-grid"></div>
+        </div>
+        <div class="menu-sec">
+          <button class="menu-new menu-reset" id="menu-reset">Reset everything</button>
         </div>
       </div>
       </div>
@@ -615,6 +620,24 @@
   }
   document.getElementById("menu-new").addEventListener("click",function(){startNewGame();closeMenu();});
   document.getElementById("newgamebtn").addEventListener("click",startNewGame);
+
+  document.getElementById("menu-reset").addEventListener("click",function(){
+    if(!confirm("Reset everything? This clears all players, scores, and game settings. Cannot be undone."))return;
+    Object.keys(tickers).forEach(function(k){if(tickers[k]&&tickers[k].timeoutId)clearTimeout(tickers[k].timeoutId);});
+    tickers={};
+    state.gameName="";
+    state.players=[mk("Player 1"),mk("Player 2")];
+    state.rounds=[];
+    state.targetScore="";
+    state.scoreMode="running";
+    state.keypadType="standard";
+    ensureShape(state);
+    save();
+    gameNameEl.value="";targetEl.value="";
+    applyScoreMode("running");
+    renderAll();
+    closeMenu();
+  });
 
   // ---- welcome guide ----
   var guideOverlay=document.getElementById("guide-overlay");
