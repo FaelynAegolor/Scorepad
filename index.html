@@ -60,6 +60,7 @@
   .ios-toggle-dot{display:block;width:22px;height:22px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
   .ios-toggle[aria-pressed="true"] .ios-toggle-dot{transform:translateX(18px)}
   .menu-new{width:100%;background:transparent;border:1px solid var(--line);border-radius:12px;color:var(--text);font:inherit;font-weight:600;font-size:14px;padding:12px;cursor:pointer;transition:.15s}
+  .menu-new+.menu-new{margin-top:8px}
   .menu-new:hover{border-color:var(--accent);color:var(--accent)}
 
   .gamename{width:100%;margin:14px 0 10px;background:transparent;border:none;color:var(--text);font-family:var(--font-display);font-weight:600;font-size:clamp(28px,7vw,42px);letter-spacing:-1px;padding:2px 0;border-bottom:2px dashed transparent;transition:.15s}
@@ -244,11 +245,7 @@
           <div id="mode-list"></div>
         </div>
         <div class="menu-sec">
-          <div class="menu-h">Help</div>
           <button class="menu-new" id="menu-guide">Show guide</button>
-        </div>
-        <div class="menu-sec">
-          <div class="menu-h">Game</div>
           <button class="menu-new" id="menu-new">Start new game</button>
         </div>
         <div class="menu-sec">
