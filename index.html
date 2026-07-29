@@ -242,6 +242,7 @@
   .st-name{flex:1;font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
   .st-score{font-family:var(--font-mono);font-weight:700;font-size:16px;font-variant-numeric:tabular-nums;color:var(--text)}
   .banner-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .bbtn.full{grid-column:1/-1}
   .bbtn{font:inherit;font-weight:700;font-size:14px;padding:13px;border-radius:12px;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--text);transition:.15s}
   .bbtn:hover{border-color:var(--muted)}
   .bbtn.primary{grid-column:1/-1;background:var(--gold);color:var(--on-gold);border-color:var(--gold)}
@@ -945,11 +946,12 @@
     else{html+='<div class="win-name" style="color:'+winners[0].pl.color+'">'+esc(winners[0].pl.name||"—")+'</div><div class="win-score"><b>'+winners[0].t+'</b> points</div>';}
     html+='<ul class="standings">';
     st.forEach(function(o){html+='<li class="'+(o.rank===1?"top":"")+'"><span class="st-rank">'+ordinal(o.rank)+'</span><span class="st-dot" style="background:'+o.pl.color+'"></span><span class="st-name">'+esc(o.pl.name||"—")+'</span><span class="st-score">'+o.t+'</span></li>';});
-    html+='</ul><div class="banner-btns"><button class="bbtn primary" id="b-save">Save as image</button><button class="bbtn" id="b-new">New game</button><button class="bbtn" id="b-close">Close</button></div>';
+    html+='</ul><div class="banner-btns"><button class="bbtn primary" id="b-share">Share results</button><button class="bbtn full" id="b-save">Save as image</button><button class="bbtn" id="b-new">New game</button><button class="bbtn" id="b-close">Close</button></div>';
     bannerEl.innerHTML=html;
     document.getElementById("b-close").addEventListener("click",function(){overlay.hidden=true;stopConfetti();});
     document.getElementById("b-new").addEventListener("click",function(){state.rounds=[];save();renderAll();overlay.hidden=true;stopConfetti();});
     document.getElementById("b-save").addEventListener("click",saveImage);
+    document.getElementById("b-share").addEventListener("click",shareImage);
     overlay.hidden=false;
     if(!tie)launchConfetti();
   }
@@ -972,15 +974,48 @@
   }
   function stopConfetti(){var h=document.getElementById("confetti-holder");if(h)h.innerHTML="";}
 
+  function downloadBlob(blob,filename){
+    var url=URL.createObjectURL(blob),a=document.createElement("a");
+    a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+    setTimeout(function(){URL.revokeObjectURL(url);},1500);
+  }
+  function resultsFilename(){
+    var name=(state.gameName||"scorepad").replace(/[^\w\- ]+/g,"").trim()||"scorepad";
+    return name+"-results.png";
+  }
   function saveImage(){
     var ready=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
     ready.then(function(){
       var canvas=drawResults();
-      var name=(state.gameName||"scorepad").replace(/[^\w\- ]+/g,"").trim()||"scorepad";
       canvas.toBlob(function(blob){
         if(!blob){window.open(canvas.toDataURL("image/png"));return;}
-        var url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name+"-results.png";
-        document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},1500);
+        downloadBlob(blob,resultsFilename());
+      },"image/png");
+    });
+  }
+  function shareImage(){
+    var ready=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
+    ready.then(function(){
+      var canvas=drawResults();
+      var filename=resultsFilename();
+      canvas.toBlob(function(blob){
+        if(!blob){window.open(canvas.toDataURL("image/png"));return;}
+        var file;
+        try{file=new File([blob],filename,{type:"image/png"});}
+        catch(e){downloadBlob(blob,filename);return;}
+        var shareData={
+          files:[file],
+          title:(state.gameName||"Game night")+" results",
+          text:(state.gameName||"Game night")+" results — via scorepad.uk"
+        };
+        if(navigator.canShare&&navigator.canShare(shareData)&&navigator.share){
+          navigator.share(shareData).catch(function(err){
+            if(err&&err.name==="AbortError")return;
+            downloadBlob(blob,filename);
+          });
+        } else {
+          downloadBlob(blob,filename);
+        }
       },"image/png");
     });
   }
