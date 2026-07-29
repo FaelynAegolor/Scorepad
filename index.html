@@ -259,6 +259,10 @@
   .guide-x{position:absolute;top:12px;right:12px;background:transparent;border:none;color:var(--muted);font-size:22px;cursor:pointer;padding:4px 10px;line-height:1;border-radius:8px;transition:.15s}
   .guide-x:hover{background:var(--line);color:var(--text)}
   .guide-eyebrow{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold);text-align:center;margin-top:4px}
+  .guide-brand{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:22px}
+  .guide-brand-mark{width:36px;height:36px;flex:none;filter:drop-shadow(0 1px 2px rgba(0,0,0,.22))}
+  .guide-brand-name{font-family:var(--font-display);font-weight:900;font-size:26px;letter-spacing:-.5px;color:var(--text);line-height:1;margin:0}
+  .guide-brand-name .tld{color:var(--gold)}
   .guide-title{font-family:var(--font-display);font-weight:900;font-size:28px;margin:6px 0 10px;color:var(--text);line-height:1.1;text-align:center;letter-spacing:-.5px}
   .guide-lede{font-size:14px;color:var(--muted);text-align:center;line-height:1.5;margin:0 4px 22px}
   .guide-list{list-style:none;padding:0;margin:0 0 18px;display:grid;gap:16px}
@@ -350,6 +354,10 @@
 <div class="overlay" id="guide-overlay" hidden>
   <div class="banner" role="dialog" aria-modal="true" aria-labelledby="guide-title">
     <button class="guide-x" id="guide-x" aria-label="Close guide">×</button>
+    <div class="guide-brand">
+      <svg class="guide-brand-mark" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="40" height="40" rx="10" fill="#f4b942"/><g stroke="#1a1226" stroke-width="3" stroke-linecap="round" fill="none"><line x1="11" y1="10" x2="11" y2="30"/><line x1="17" y1="10" x2="17" y2="30"/><line x1="23" y1="10" x2="23" y2="30"/><line x1="29" y1="10" x2="29" y2="30"/><line x1="7" y1="32" x2="33" y2="8"/></g></svg>
+      <h3 class="guide-brand-name">Scorepad<span class="tld">.uk</span></h3>
+    </div>
     <div class="guide-eyebrow">Nice to meeple you</div>
     <h2 class="guide-title" id="guide-title">Here's the deal</h2>
     <p class="guide-lede">A free, offline scorekeeper for board and card games — it does the sums so you don't have to.</p>
