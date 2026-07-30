@@ -140,6 +140,7 @@
   .score-block small{display:block;font-size:10px;color:var(--muted);font-family:var(--font-body);font-weight:700;letter-spacing:2px;text-transform:uppercase;margin:8px 0 0}
   .reached-pill{display:none;margin:12px auto 0;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--on-gold);background:var(--gold);padding:3px 10px;border-radius:999px;width:fit-content}
   .card.reached .reached-pill{display:block}
+  .reached-pill.elim{color:#fff;background:#ef4444}
 
   .mini-total{display:none;align-items:center;font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin:-2px 0 8px}
   .mini-total-val{font-size:13px;color:var(--text);letter-spacing:0;text-transform:none;margin-left:4px}
@@ -220,6 +221,9 @@
   .kp-display{background:color-mix(in srgb,var(--text) 8%,transparent);border-radius:12px;padding:14px;text-align:center;font-family:var(--font-mono);font-weight:700;font-size:36px;color:var(--text);margin-bottom:12px;font-variant-numeric:tabular-nums;line-height:1}
   .kp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
   .kp-numeric[hidden]{display:none}
+  .kp-quickrow{margin-bottom:12px}
+  .kp-quickrow[hidden]{display:none}
+  .kp-quickrow .pk-lab{margin-bottom:6px}
   .kp-picker[hidden]{display:none}
   .kp-picker{margin-bottom:12px}
   .pk-section{margin-bottom:12px}
@@ -420,9 +424,9 @@
   <input class="gamename" id="gamename" placeholder="Name this game…" aria-label="Game name" maxlength="40">
 
   <div class="setup">
-    <span>Play to</span>
+    <span id="target-lab-pre">Play to</span>
     <input class="target" id="target" type="number" inputmode="numeric" min="1" placeholder="—" aria-label="Target score to win">
-    <span>points <span class="opt">(optional)</span></span>
+    <span id="target-lab-post">points <span class="opt">(optional)</span></span>
   </div>
 
   <div class="section-label">Scoreboard</div>
@@ -488,6 +492,7 @@
     <div class="kp-current"><span id="kp-current-lab">current</span> <span id="kp-current">0</span></div>
     <div class="kp-picker" id="kp-picker" hidden></div>
     <div class="kp-numeric" id="kp-numeric">
+    <div class="kp-quickrow" id="kp-quickrow" hidden></div>
     <div class="kp-display" id="kp-display">0</div>
     <div class="kp-grid">
       <button class="kpk" data-num="7">7</button>
@@ -538,7 +543,9 @@
   var MODES={
     standard:{label:"Standard",note:"Just the number pad, no target",target:"",keypad:"standard"},
     flip7:{label:"Flip 7",name:"Flip 7",target:"200",note:"Play to 200, with the card picker",keypad:"flip7"},
-    sushigo:{label:"Sushi Go!",name:"Sushi Go!",target:"",note:"Three rounds, with the card picker",keypad:"sushigo"}
+    sushigo:{label:"Sushi Go!",name:"Sushi Go!",target:"",note:"Three rounds, with the card picker",keypad:"sushigo"},
+    starrealms:{label:"Star Realms",name:"Star Realms",target:"50",note:"Starts at 50 Authority, counts down",keypad:"starrealms",countdown:true},
+    yugioh:{label:"Yu-Gi-Oh!",name:"Yu-Gi-Oh!",target:"8000",note:"Starts at 8000 LP, counts down",keypad:"yugioh",countdown:true}
   };
   var VARMAP={bg0:"--bg0",bg1:"--bg1",bg2:"--bg2",panel:"--panel",line:"--line",text:"--text",muted:"--muted",paper:"--paper",paper2:"--paper2",paperLine:"--paper-line",ink:"--ink",inkSoft:"--ink-soft",accent:"--accent",accentPress:"--accent-press",gold:"--gold",onGold:"--on-gold"};
 
@@ -557,12 +564,13 @@
     delete s.pending;
     if(s.targetScore===undefined)s.targetScore="";if(!s.theme||!THEMES[s.theme])s.theme="felt";
     if(s.scoreMode!=="rounds")s.scoreMode="running";
-    if(["standard","flip7","sushigo"].indexOf(s.keypadType)<0)s.keypadType="standard";
+    if(["standard","flip7","sushigo","starrealms","yugioh"].indexOf(s.keypadType)<0)s.keypadType="standard";
     if(typeof s.showRank!=="boolean")s.showRank=(typeof s.showRankTotal==="boolean")?s.showRankTotal:true;
     if(typeof s.showTotal!=="boolean")s.showTotal=(typeof s.showRankTotal==="boolean")?s.showRankTotal:true;
     delete s.showRankTotal;
     if(typeof s.showProgress!=="boolean")s.showProgress=true;
     if(typeof s.showAdjustBtns!=="boolean")s.showAdjustBtns=true;
+    if(typeof s.countdown!=="boolean")s.countdown=false;
     var used=s.players.map(function(p){return p.color;}).filter(Boolean);
     s.players.forEach(function(p){if(!p.color){var c=PALETTE.filter(function(x){return used.indexOf(x)<0;})[0]||PALETTE[used.length%PALETTE.length];p.color=c;used.push(c);}});
   }
@@ -648,8 +656,17 @@
     state.targetScore=m.target||"";
     targetEl.value=state.targetScore;
     state.keypadType=m.keypad||"standard";
+    state.countdown=!!m.countdown;
+    syncTargetLabel();
     save();syncModeMenu();refreshDynamic();closeMenu();
   }
+  function syncTargetLabel(){
+    var pre=document.getElementById("target-lab-pre"),post=document.getElementById("target-lab-post");
+    if(!pre||!post)return;
+    if(state.countdown){pre.textContent="Starts at";post.innerHTML="life";}
+    else{pre.textContent="Play to";post.innerHTML='points <span class="opt">(optional)</span>';}
+  }
+  function lifeOffset(){var t=parseInt(state.targetScore,10);return (state.countdown&&!isNaN(t))?t:0;}
 
   function buildScoreModeMenu(){
     var l=document.getElementById("score-mode-list");l.innerHTML="";
@@ -785,9 +802,11 @@
     state.showTotal=true;
     state.showProgress=true;
     state.showAdjustBtns=true;
+    state.countdown=false;
     ensureShape(state);
     save();
     gameNameEl.value="";targetEl.value="";
+    syncTargetLabel();
     applyScoreMode("running");
     syncModeMenu();
     syncDisplayToggles();
@@ -875,7 +894,7 @@
       document.getElementById("kp-current").textContent=pendingScoreFor(playerId);
     } else {
       document.getElementById("kp-current-lab").textContent="current";
-      document.getElementById("kp-current").textContent=totalFor(playerId);
+      document.getElementById("kp-current").textContent=totalFor(playerId)+lifeOffset();
     }
     buildPicker();
     updateKpDisplay();kpOverlay.hidden=false;
@@ -891,7 +910,42 @@
     resetPickerState();
     if(state.keypadType==="flip7"){pk.hidden=false;num.hidden=true;pk.innerHTML=flip7HTML();attachFlip7();updateFlip7();}
     else if(state.keypadType==="sushigo"){pk.hidden=false;num.hidden=true;pk.innerHTML=sushigoHTML();attachSushigo();updateSushigo();}
-    else{pk.hidden=true;num.hidden=false;}
+    else{pk.hidden=true;num.hidden=false;buildQuickRow();}
+  }
+  var QUICK_VALUES={
+    starrealms:[1,2,3,5,8,10],
+    yugioh:[100,200,300,500,800,1000,1500,2000,2400,3000,4000,8000]
+  };
+  function fmtQuick(n){return n>=1000?(n/1000)+"k":String(n);}
+  function buildQuickRow(){
+    var row=document.getElementById("kp-quickrow");
+    var minusBtn=document.getElementById("kp-minus"),plusBtn=document.getElementById("kp-plus");
+    var vals=QUICK_VALUES[state.keypadType];
+    if(!vals){row.hidden=true;row.innerHTML="";minusBtn.textContent="− Subtract";plusBtn.textContent="Add +";return;}
+    row.hidden=false;
+    var cols=state.keypadType==="starrealms"?6:4;
+    var html='<div class="pk-lab">Quick '+(state.keypadType==="starrealms"?"damage":"LP")+' — tap to fill</div>'+
+      '<div class="pk-mod-grid" style="grid-template-columns:repeat('+cols+',1fr)">'+
+      vals.map(function(n){return '<button class="pk-mod" data-quick="'+n+'">'+fmtQuick(n)+'</button>';}).join("")+
+      '</div>';
+    if(state.keypadType==="yugioh"){
+      html+='<div class="pk-actions" style="grid-template-columns:1fr;margin-top:6px"><button class="pk-bust" id="kp-halve">½ Halve current LP</button></div>';
+      minusBtn.textContent="− Damage";plusBtn.textContent="Gain +";
+    } else {
+      minusBtn.textContent="− Damage";plusBtn.textContent="Heal +";
+    }
+    row.innerHTML=html;
+    row.querySelectorAll("[data-quick]").forEach(function(b){
+      b.addEventListener("click",function(){kpState.value=b.getAttribute("data-quick");updateKpDisplay();});
+    });
+    var halveBtn=document.getElementById("kp-halve");
+    if(halveBtn){
+      halveBtn.addEventListener("click",function(){
+        var cur=totalFor(kpState.playerId)+lifeOffset();
+        kpState.value=String(Math.max(0,Math.floor(cur/2)));
+        updateKpDisplay();
+      });
+    }
   }
   function flip7HTML(){
     var nums="";for(var i=0;i<=12;i++)nums+='<button class="pk-num" data-n="'+i+'">'+i+'</button>';
@@ -1220,9 +1274,10 @@
       return t;
     });
     var maxTotal=roundTotals.length?Math.max.apply(null,roundTotals):null;
+    var sheetOff=lifeOffset();
     state.players.forEach(function(pl,i){
       var t=roundTotals[i];
-      html+='<td class="totalcell'+(t===maxTotal?' topscore':'')+'">'+t+'</td>';
+      html+='<td class="totalcell'+(t===maxTotal?' topscore':'')+'">'+(t+sheetOff)+'</td>';
     });
     html+='</tr></tfoot></table></div>';
     sheetEl.innerHTML=html;
@@ -1266,10 +1321,11 @@
       return t;
     });
     var maxTotal=roundTotals.length?Math.max.apply(null,roundTotals):null;
+    var off=lifeOffset();
     var cells=totalRow.querySelectorAll(".totalcell");
     state.players.forEach(function(pl,i){
       var cell=cells[i];if(!cell)return;
-      cell.textContent=roundTotals[i];
+      cell.textContent=roundTotals[i]+off;
       cell.classList.toggle("topscore",roundTotals[i]===maxTotal);
     });
   }
@@ -1279,19 +1335,24 @@
     var hasActivity=state.rounds.some(function(e){return !e.marker;});
     var target=parseInt(state.targetScore,10),hasTarget=!isNaN(target)&&target>0,anyReached=false;
     var isRounds=state.scoreMode==="rounds";
+    var offset=lifeOffset();
     var tiles=cardsEl.querySelectorAll(".tile");
     state.players.forEach(function(pl,i){var tile=tiles[i];if(!tile)return;var c=tile.querySelector(".card");if(!c)return;
       var total=totalById[pl.id];
-      var mini=c.querySelector(".mini-total-val");if(mini)mini.textContent=total;
+      var displayTotal=total+offset;
+      var mini=c.querySelector(".mini-total-val");if(mini)mini.textContent=displayTotal;
       var miniEl=c.querySelector(".mini-total");if(miniEl)miniEl.style.display=state.showTotal?"":"none";
       var entered=isRounds&&Object.prototype.hasOwnProperty.call(segs.current,pl.id);
-      c.querySelector(".tnum").textContent=isRounds?(segs.current[pl.id]||0):total;
+      c.querySelector(".tnum").textContent=isRounds?(segs.current[pl.id]||0):displayTotal;
       c.classList.toggle("rnd-entered",entered);
       c.classList.toggle("rnd-pending",isRounds&&!entered);
       var isLeader=hasActivity&&rankById[pl.id]===1;
       c.classList.toggle("leader",isLeader);
       tile.classList.toggle("leader",isLeader);
-      var reached=hasTarget&&total>=target;c.classList.toggle("reached",reached);if(reached)anyReached=true;
+      var reached=state.countdown?(hasTarget&&displayTotal<=0):(hasTarget&&total>=target);
+      c.classList.toggle("reached",reached);if(reached)anyReached=true;
+      var pillEl=c.querySelector(".reached-pill");
+      if(pillEl){pillEl.textContent=state.countdown?"eliminated":"target reached";pillEl.classList.toggle("elim",!!state.countdown);}
       var badge=tile.querySelector(".rank-badge");
       if(badge){
         var showBadge=state.showRank&&hasActivity;
@@ -1301,7 +1362,7 @@
       var showRing=hasTarget&&state.showProgress;
       tile.classList.toggle("has-progress",showRing);
       if(showRing){
-        var pct=Math.max(0,Math.min(100,total<=0?0:(total/target)*100));
+        var pct=state.countdown?Math.max(0,Math.min(100,(displayTotal/target)*100)):Math.max(0,Math.min(100,total<=0?0:(total/target)*100));
         tile.style.setProperty("--tile-progress",pct);
       }
     });
@@ -1324,16 +1385,17 @@
   function openFinish(){
     if(!state.players.length){alert("Add players first.");return;}
     var st=standings(),winners=st.filter(function(o){return o.rank===1;}),tie=winners.length>1;
+    var off=lifeOffset(),unit=state.countdown?"life":"points";
     var dateStr=new Date().toLocaleDateString(undefined,{year:"numeric",month:"long",day:"numeric"});
     var gameTitle=state.gameName||"Game night";
     var html='<div class="win-logo">'+LOGO_SVG+'</div>';
     html+='<div class="win-game">'+esc(gameTitle)+'</div>';
     html+='<div class="win-date">'+esc(dateStr)+'</div>';
     html+='<div class="win-label">'+(tie?"It’s a tie":"Winner")+'</div>';
-    if(tie){html+='<div class="win-name">'+winners.map(function(o){return esc(o.pl.name||"—");}).join(" & ")+'</div><div class="win-score">tied on <b>'+winners[0].t+'</b> points</div>';}
-    else{html+='<div class="win-name" style="color:'+winners[0].pl.color+'">'+esc(winners[0].pl.name||"—")+'</div><div class="win-score"><b>'+winners[0].t+'</b> points</div>';}
+    if(tie){html+='<div class="win-name">'+winners.map(function(o){return esc(o.pl.name||"—");}).join(" & ")+'</div><div class="win-score">tied on <b>'+(winners[0].t+off)+'</b> '+unit+'</div>';}
+    else{html+='<div class="win-name" style="color:'+winners[0].pl.color+'">'+esc(winners[0].pl.name||"—")+'</div><div class="win-score"><b>'+(winners[0].t+off)+'</b> '+unit+'</div>';}
     html+='<ul class="standings">';
-    st.forEach(function(o){html+='<li class="'+(o.rank===1?"top":"")+'"><span class="st-rank">'+ordinal(o.rank)+'</span><span class="st-dot" style="background:'+o.pl.color+'"></span><span class="st-name">'+esc(o.pl.name||"—")+'</span><span class="st-score">'+o.t+'</span></li>';});
+    st.forEach(function(o){html+='<li class="'+(o.rank===1?"top":"")+'"><span class="st-rank">'+ordinal(o.rank)+'</span><span class="st-dot" style="background:'+o.pl.color+'"></span><span class="st-name">'+esc(o.pl.name||"—")+'</span><span class="st-score">'+(o.t+off)+'</span></li>';});
     html+='</ul><div class="banner-btns"><button class="bbtn primary" id="b-share">Share results</button><button class="bbtn full" id="b-save">Save as image</button><button class="bbtn" id="b-new">New game</button><button class="bbtn" id="b-close">Close</button></div>';
     bannerEl.innerHTML=html;
     document.getElementById("b-close").addEventListener("click",function(){overlay.hidden=true;stopConfetti();});
@@ -1410,6 +1472,7 @@
   function drawResults(){
     var t=THEMES[currentTheme]||THEMES.felt,c=t.c,f=t.f;
     var st=standings(),winners=st.filter(function(o){return o.rank===1;}),tie=winners.length>1;
+    var off=lifeOffset(),unit=state.countdown?"life":"points";
     var W=1080,pad=70,rowH=92,headH=560,footH=110,H=headH+st.length*rowH+footH;
     var cv=document.createElement("canvas");cv.width=W;cv.height=H;var x=cv.getContext("2d");
     var g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,c.bg0);g.addColorStop(.55,c.bg1);g.addColorStop(1,c.bg2);
@@ -1426,12 +1489,12 @@
       x.fillStyle=c.text;x.font='900 46px '+f.display;
       x.fillText(clip(x,winners.map(function(o){return o.pl.name||"—";}).join(" & "),W-2*pad),W/2,420);
       x.fillStyle=c.muted;x.font='400 26px '+f.body;
-      x.fillText("tied on "+winners[0].t+" points",W/2,462);
+      x.fillText("tied on "+(winners[0].t+off)+" "+unit,W/2,462);
     } else {
       x.fillStyle=winners[0].pl.color;x.font='900 50px '+f.display;
       x.fillText(clip(x,winners[0].pl.name||"—",W-2*pad),W/2,422);
       x.fillStyle=c.muted;x.font='400 26px '+f.body;
-      x.fillText(winners[0].t+" points",W/2,462);
+      x.fillText((winners[0].t+off)+" "+unit,W/2,462);
     }
     var y=headH,rowBg=t.dark?"rgba(255,255,255,.05)":"rgba(0,0,0,.05)";
     st.forEach(function(o){
@@ -1440,7 +1503,7 @@
       x.fillStyle=top?c.gold:c.muted;x.font='700 30px '+f.mono;x.fillText(ordinal(o.rank),pad+26,cy+11);
       x.fillStyle=o.pl.color;x.beginPath();x.arc(pad+130,cy,13,0,Math.PI*2);x.fill();
       x.fillStyle=c.text;x.font='600 34px '+f.body;x.fillText(clip(x,o.pl.name||"—",W-2*pad-360),pad+160,cy+12);
-      x.textAlign="right";x.fillStyle=top?c.gold:c.text;x.font='700 40px '+f.mono;x.fillText(String(o.t),W-pad-30,cy+13);
+      x.textAlign="right";x.fillStyle=top?c.gold:c.text;x.font='700 40px '+f.mono;x.fillText(String(o.t+off),W-pad-30,cy+13);
       x.textAlign="left";y+=rowH;
     });
     x.textAlign="center";x.fillStyle=c.muted;x.font='700 24px '+f.body;x.fillText("SCOREPAD.UK",W/2,H-46);
@@ -1462,7 +1525,7 @@
   function rankTier(rank){return rank===1?"gold":rank===2?"silver":rank===3?"bronze":"plain";}
   function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
 
-  buildThemeMenu();buildModeMenu();buildScoreModeMenu();applyTheme(currentTheme);syncDisplayToggles();applyScoreMode(state.scoreMode);
+  buildThemeMenu();buildModeMenu();buildScoreModeMenu();applyTheme(currentTheme);syncDisplayToggles();syncTargetLabel();applyScoreMode(state.scoreMode);
   if(!state.seenGuide)openGuide();
 })();
 </script>
