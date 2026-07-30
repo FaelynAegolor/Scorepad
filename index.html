@@ -382,6 +382,32 @@
   .guide-foot{font-size:11px;color:var(--muted);opacity:.7;text-align:center;padding-top:14px;border-top:1px solid var(--line);margin:0 0 16px}
   .guide-cta{width:100%;font:inherit;font-weight:700;font-size:14px;padding:13px;border-radius:12px;cursor:pointer;border:1px solid var(--gold);background:var(--gold);color:var(--on-gold);transition:.15s}
   .guide-cta:hover{filter:brightness(1.05)}
+
+  /* Game mode: a slimmed-down, big-tile layout for once play has actually started -- trims
+     everything that only matters during setup (branding, name/target editing chrome, footer,
+     add-player) so the tiles get the room, and enlarges them since they're now the whole point
+     of the screen. #gamemodebtn stays visible (only .brand hides) so it's always one tap to
+     get back out. */
+  /* space-between with .brand hidden would collapse the lone head-actions child to the
+     header's start edge (flex-start), dragging the menu -- anchored right:0 off it -- off
+     the left of the screen. Pin it to the end explicitly instead. */
+  body.game-mode header{margin-bottom:2px;justify-content:flex-end}
+  body.game-mode .brand{display:none}
+  body.game-mode .gamename{font-size:16px;font-weight:700;margin:8px 0 4px;letter-spacing:-.2px}
+  body.game-mode .setup{margin:0 2px 10px;font-size:12px}
+  body.game-mode .target{width:60px;padding:4px 8px;font-size:13px}
+  body.game-mode .section-label{display:none}
+  body.game-mode .addplayer{display:none}
+  body.game-mode footer{display:none}
+  body.game-mode .cards{grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+  body.game-mode .card{padding:20px 18px 16px}
+  body.game-mode .tnum{font-size:52px}
+  @media (max-width:420px){body.game-mode .cards{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}body.game-mode .tnum{font-size:40px}}
+  body.game-mode .adjbtn{width:42px;height:42px;font-size:22px}
+  body.game-mode .pdot{width:30px;height:30px}
+  body.game-mode .nameline{margin-bottom:6px}
+  body.game-mode .rank-badge{width:26px;height:26px;font-size:15px}
+  #gamemodebtn[aria-pressed="true"]{border-color:var(--gold);color:var(--gold)}
 </style>
 </head>
 <body data-scoremode="running">
@@ -392,6 +418,9 @@
       <div><h1>Scorepad<span class="tld">.uk</span></h1><p>Keep score for game night</p></div>
     </div>
     <div class="head-actions">
+      <button class="menubtn" id="gamemodebtn" aria-label="Toggle game mode" aria-pressed="false" title="Game mode — full-screen layout for play">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+      </button>
       <button class="menubtn" id="newgamebtn" aria-label="Start new game" title="Start new game">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
       </button>
@@ -601,6 +630,7 @@
     if(typeof s.showAdjustBtns!=="boolean")s.showAdjustBtns=true;
     if(typeof s.countdown!=="boolean")s.countdown=false;
     if(typeof s.gameNameCustom!=="boolean")s.gameNameCustom=false;
+    if(typeof s.gameMode!=="boolean")s.gameMode=false;
     var used=s.players.map(function(p){return p.color;}).filter(Boolean);
     s.players.forEach(function(p){if(!p.color){var c=PALETTE.filter(function(x){return used.indexOf(x)<0;})[0]||PALETTE[used.length%PALETTE.length];p.color=c;used.push(c);}});
   }
@@ -868,6 +898,30 @@
   }
   document.getElementById("menu-new").addEventListener("click",function(){startNewGame();closeMenu();});
   document.getElementById("newgamebtn").addEventListener("click",startNewGame);
+
+  // ---- game mode: a slimmed, big-tile layout for at-the-table play (see CSS for what it hides) ----
+  var GAMEMODE_MAXIMIZE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>';
+  var GAMEMODE_MINIMIZE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>';
+  var gameModeBtn=document.getElementById("gamemodebtn");
+  function syncGameModeUI(){
+    document.body.classList.toggle("game-mode",state.gameMode);
+    gameModeBtn.setAttribute("aria-pressed",state.gameMode?"true":"false");
+    gameModeBtn.innerHTML=state.gameMode?GAMEMODE_MINIMIZE:GAMEMODE_MAXIMIZE;
+    gameModeBtn.title=state.gameMode?"Exit game mode":"Game mode — full-screen layout for play";
+  }
+  gameModeBtn.addEventListener("click",function(){
+    state.gameMode=!state.gameMode;save();syncGameModeUI();
+    // Best-effort native fullscreen -- silently a no-op on browsers that don't support it
+    // (notably iOS Safari), and harmless if the request is blocked for any other reason.
+    try{
+      if(state.gameMode&&document.documentElement.requestFullscreen&&!document.fullscreenElement){
+        document.documentElement.requestFullscreen().catch(function(){});
+      }else if(!state.gameMode&&document.fullscreenElement&&document.exitFullscreen){
+        document.exitFullscreen().catch(function(){});
+      }
+    }catch(e){}
+  });
+  syncGameModeUI();
 
   document.getElementById("menu-reset").addEventListener("click",function(){
     if(!confirm("Reset everything? This clears all players, scores, and game settings. Cannot be undone."))return;
