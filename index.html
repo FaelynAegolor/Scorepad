@@ -408,14 +408,23 @@
   body.game-mode .section-label{display:none}
   body.game-mode .addplayer{display:none}
   body.game-mode footer{display:none}
-  body.game-mode .cards{grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
-  body.game-mode .card{padding:20px 18px 16px}
-  body.game-mode .tnum{font-size:52px}
-  @media (max-width:420px){body.game-mode .cards{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}body.game-mode .tnum{font-size:40px}}
-  body.game-mode .adjbtn{width:42px;height:42px;font-size:22px}
-  body.game-mode .pdot{width:30px;height:30px}
-  body.game-mode .nameline{margin-bottom:6px}
-  body.game-mode .rank-badge{width:26px;height:26px;font-size:15px}
+  /* Large minmax deliberately forces down to one tile per row on phones and two on tablets --
+     fewer, bigger tiles reads better across a table than a dense grid of small ones. The score
+     is the reason this mode exists, so it gets the most aggressive size jump of anything here;
+     name/badge/buttons grow too, but stay clearly secondary to it. */
+  body.game-mode .cards{grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+  body.game-mode .card{padding:22px 20px 18px}
+  body.game-mode .score-block{margin-top:22px}
+  body.game-mode .tnum{font-size:96px;padding:0 10px}
+  body.game-mode .score-block small{font-size:13px;margin-top:14px}
+  @media (max-width:480px){body.game-mode .cards{grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}body.game-mode .tnum{font-size:76px}}
+  @media (max-width:340px){body.game-mode .tnum{font-size:64px}}
+  body.game-mode .adjbtn{width:52px;height:52px;font-size:26px}
+  body.game-mode .pdot{width:32px;height:32px}
+  body.game-mode .pname{font-size:21px}
+  body.game-mode .nameline{margin-bottom:10px}
+  body.game-mode .rank-badge{width:28px;height:28px;font-size:16px}
+  body.game-mode .mini-total{font-size:11px}
   #gamemodebtn[aria-pressed="true"]{border-color:var(--gold);color:var(--gold)}
 </style>
 </head>
@@ -961,11 +970,33 @@
   var GAMEMODE_MAXIMIZE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>';
   var GAMEMODE_MINIMIZE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>';
   var gameModeBtn=document.getElementById("gamemodebtn");
+
+  // Keeps the screen from sleeping/dimming while in game mode -- exactly what you don't want
+  // mid-scoresheet. Unsupported browsers (older Safari/Firefox) just silently don't get it;
+  // nothing else about game mode depends on this working.
+  var wakeLockSentinel=null;
+  function requestWakeLock(){
+    if(!("wakeLock" in navigator))return;
+    navigator.wakeLock.request("screen").then(function(sentinel){
+      wakeLockSentinel=sentinel;
+      sentinel.addEventListener("release",function(){wakeLockSentinel=null;});
+    }).catch(function(){});
+  }
+  function releaseWakeLock(){
+    if(wakeLockSentinel){var s=wakeLockSentinel;wakeLockSentinel=null;s.release().catch(function(){});}
+  }
+  // The lock is auto-released whenever the tab is hidden (app-switch, screen lock) -- grab it
+  // again once the page is visible, but only if game mode is still meant to be on.
+  document.addEventListener("visibilitychange",function(){
+    if(state.gameMode&&document.visibilityState==="visible"&&!wakeLockSentinel)requestWakeLock();
+  });
+
   function syncGameModeUI(){
     document.body.classList.toggle("game-mode",state.gameMode);
     gameModeBtn.setAttribute("aria-pressed",state.gameMode?"true":"false");
     gameModeBtn.innerHTML=state.gameMode?GAMEMODE_MINIMIZE:GAMEMODE_MAXIMIZE;
     gameModeBtn.title=state.gameMode?"Exit game mode":"Game mode — full-screen layout for play";
+    if(state.gameMode)requestWakeLock();else releaseWakeLock();
   }
   gameModeBtn.addEventListener("click",function(){
     state.gameMode=!state.gameMode;save();syncGameModeUI();
