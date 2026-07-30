@@ -62,6 +62,7 @@
   .mode-opt b{display:block;font:inherit;font-weight:600;font-size:14px;color:var(--text)}
   .mode-opt small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
   .score-toggle-row{display:flex;align-items:center;gap:12px;padding:11px 13px;border:1px solid var(--line);border-radius:12px}
+  #score-mode-list+.score-toggle-row,.score-toggle-row+.score-toggle-row{margin-top:8px}
   .score-toggle-label{flex:1;min-width:0}
   .score-toggle-label b{display:block;font:inherit;font-weight:600;font-size:14px;color:var(--text)}
   .score-toggle-label small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
@@ -89,9 +90,31 @@
   .section-label::after{content:"";flex:1;height:1px;background:var(--line)}
 
   .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+  .tile{position:relative}
+  /* target-progress ring: a conic-gradient "donut" clipped down to just its outer edge
+     via the padding+mask-composite trick, traced around the same rounded rect as .card.
+     Lives on .tile (not .card, which has overflow:hidden) so it isn't clipped either. */
+  .tile.has-progress::after{
+    content:"";position:absolute;inset:0;border-radius:var(--radius);padding:2.5px;
+    background:conic-gradient(var(--pc) calc(var(--tile-progress,0) * 1%),color-mix(in srgb, var(--text) 14%, transparent) 0);
+    -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+    -webkit-mask-composite:xor;mask-composite:exclude;
+    pointer-events:none;z-index:1;transition:background .25s;
+  }
   .card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 14px 12px;transition:.25s;overflow:hidden}
-  .card.leader{border-color:var(--pc);transform:translateY(-2px);box-shadow:0 0 0 1px var(--pc),0 0 22px 0 color-mix(in srgb, var(--pc) 42%, transparent),0 14px 26px -6px rgba(0,0,0,.55),0 4px 10px -2px rgba(0,0,0,.35);z-index:1}
+  /* the "lift" transform lives on .tile (not .card) so the progress ring -- a sibling
+     pseudo-element anchored to .tile -- moves in lockstep with the card instead of
+     staying pinned to .tile's untransformed box, which threw the ring off-centre */
+  .tile.leader{transform:translateY(-2px);z-index:1}
+  .card.leader{border-color:var(--pc);box-shadow:0 0 0 1px var(--pc),0 0 22px 0 color-mix(in srgb, var(--pc) 42%, transparent),0 14px 26px -6px rgba(0,0,0,.55),0 4px 10px -2px rgba(0,0,0,.35)}
   .card.leader::before{content:"";position:absolute;inset:0;pointer-events:none;background:color-mix(in srgb, var(--pc) 7%, transparent)}
+  /* rank badge sits in .tile (not .card, which has overflow:hidden to clip the leader glow)
+     so it can hang slightly over the tile's rounded corner without being clipped */
+  .rank-badge{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-weight:700;font-size:13px;box-shadow:0 3px 8px -2px rgba(0,0,0,.5),0 0 0 2px var(--bg1);z-index:2;font-variant-numeric:tabular-nums}
+  .rank-badge.tier-gold{background:#f4c552;color:#2b2438}
+  .rank-badge.tier-silver{background:#c9c9d4;color:#2b2438}
+  .rank-badge.tier-bronze{background:#c98a4b;color:#2b2438}
+  .rank-badge.tier-plain{background:var(--line);color:var(--text)}
   .remove{border:none;background:transparent;color:var(--muted);opacity:.6;cursor:pointer;font-size:20px;line-height:1;padding:2px 6px;border-radius:6px;transition:.15s;flex:none}
   .remove:hover{color:var(--accent);opacity:1;background:color-mix(in srgb,var(--accent) 12%,transparent)}
   .nameline{position:relative;display:flex;align-items:center;gap:6px;margin-bottom:4px}
@@ -170,6 +193,16 @@
   .adjbtn{width:36px;height:36px;padding:0;border:1.5px solid var(--line);background:transparent;color:var(--text);border-radius:10px;font:inherit;font-weight:700;font-size:20px;cursor:pointer;transition:.12s;line-height:1;flex:none;display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
   .adjbtn:hover{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,transparent)}
   .adjbtn:active{transform:scale(.9)}
+  .adjbtn.small{width:24px;height:24px;border-radius:7px;font-size:14px;flex:none}
+  .cell-adj{display:flex;align-items:center;justify-content:center;gap:4px;padding:8px 4px}
+  .cell-adj .scoreinput{padding:0;width:100%;min-width:0}
+  /* the round table sits on the light "paper" surface, not the dark panel .adjbtn was
+     designed for -- var(--text) is a light colour there and was rendering invisible */
+  .cell-adj .adjbtn{border-color:var(--paper-line);color:var(--ink-soft);opacity:.55}
+  .cell-adj .adjbtn:hover{opacity:1;border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
+  .cell-adj .adjbtn:active{opacity:1;transform:scale(.9)}
+  body.hide-adjbtns .adjbtn{display:none}
+  body.hide-adjbtns .cell-adj{padding:14px 6px}
   .ticker{position:absolute;top:-16px;left:50%;background:#22c55e;color:#fff;font-family:var(--font-mono);font-weight:700;font-size:13px;padding:2px 10px;border-radius:999px;white-space:nowrap;pointer-events:none;opacity:0;transform:translateX(-50%) translateY(4px);transition:opacity .18s ease-out,transform .22s ease-out;z-index:3;letter-spacing:.5px;box-shadow:0 4px 12px -4px rgba(0,0,0,.35)}
   .ticker.show{opacity:1;transform:translateX(-50%) translateY(0)}
   .ticker.negative{background:#ef4444}
@@ -334,6 +367,22 @@
         <div class="menu-sec">
           <div class="menu-h">Scoring style</div>
           <div id="score-mode-list"></div>
+          <div class="score-toggle-row">
+            <div class="score-toggle-label"><b>Show rank badge</b><small>1st/2nd/3rd medal on each tile</small></div>
+            <button class="ios-toggle" id="rank-toggle" aria-pressed="true" aria-label="Toggle rank badge display"><span class="ios-toggle-dot"></span></button>
+          </div>
+          <div class="score-toggle-row">
+            <div class="score-toggle-label"><b>Show running total</b><small>Small total shown above each tile</small></div>
+            <button class="ios-toggle" id="total-toggle" aria-pressed="true" aria-label="Toggle running total display"><span class="ios-toggle-dot"></span></button>
+          </div>
+          <div class="score-toggle-row">
+            <div class="score-toggle-label"><b>Show target progress</b><small>Outline fills in as a player nears the target score</small></div>
+            <button class="ios-toggle" id="progress-toggle" aria-pressed="true" aria-label="Toggle target progress ring"><span class="ios-toggle-dot"></span></button>
+          </div>
+          <div class="score-toggle-row">
+            <div class="score-toggle-label"><b>Show +/− buttons</b><small>Adjust buttons on tiles and in the round table</small></div>
+            <button class="ios-toggle" id="adjbtns-toggle" aria-pressed="true" aria-label="Toggle plus and minus buttons"><span class="ios-toggle-dot"></span></button>
+          </div>
         </div>
         <div class="menu-sec">
           <div class="menu-h">Game</div>
@@ -506,6 +555,11 @@
     if(s.targetScore===undefined)s.targetScore="";if(!s.theme||!THEMES[s.theme])s.theme="felt";
     if(s.scoreMode!=="rounds")s.scoreMode="running";
     if(["standard","flip7","sushigo"].indexOf(s.keypadType)<0)s.keypadType="standard";
+    if(typeof s.showRank!=="boolean")s.showRank=(typeof s.showRankTotal==="boolean")?s.showRankTotal:true;
+    if(typeof s.showTotal!=="boolean")s.showTotal=(typeof s.showRankTotal==="boolean")?s.showRankTotal:true;
+    delete s.showRankTotal;
+    if(typeof s.showProgress!=="boolean")s.showProgress=true;
+    if(typeof s.showAdjustBtns!=="boolean")s.showAdjustBtns=true;
     var used=s.players.map(function(p){return p.color;}).filter(Boolean);
     s.players.forEach(function(p){if(!p.color){var c=PALETTE.filter(function(x){return used.indexOf(x)<0;})[0]||PALETTE[used.length%PALETTE.length];p.color=c;used.push(c);}});
   }
@@ -614,6 +668,22 @@
     if(t)t.setAttribute("aria-pressed",state.scoreMode==="rounds"?"true":"false");
   }
 
+  function applyDisplayToggle(field,on){
+    state[field]=!!on;
+    save();syncDisplayToggles();refreshDynamic();
+  }
+  function syncDisplayToggles(){
+    var rt=document.getElementById("rank-toggle");if(rt)rt.setAttribute("aria-pressed",state.showRank?"true":"false");
+    var tt=document.getElementById("total-toggle");if(tt)tt.setAttribute("aria-pressed",state.showTotal?"true":"false");
+    var pt=document.getElementById("progress-toggle");if(pt)pt.setAttribute("aria-pressed",state.showProgress?"true":"false");
+    var at=document.getElementById("adjbtns-toggle");if(at)at.setAttribute("aria-pressed",state.showAdjustBtns?"true":"false");
+    document.body.classList.toggle("hide-adjbtns",!state.showAdjustBtns);
+  }
+  document.getElementById("rank-toggle").addEventListener("click",function(){applyDisplayToggle("showRank",!state.showRank);});
+  document.getElementById("total-toggle").addEventListener("click",function(){applyDisplayToggle("showTotal",!state.showTotal);});
+  document.getElementById("progress-toggle").addEventListener("click",function(){applyDisplayToggle("showProgress",!state.showProgress);});
+  document.getElementById("adjbtns-toggle").addEventListener("click",function(){applyDisplayToggle("showAdjustBtns",!state.showAdjustBtns);});
+
   var tickers={};
   function pendingHas(playerId){return Object.prototype.hasOwnProperty.call(buildSegments().current,playerId);}
   function pendingScoreFor(playerId){var c=buildSegments().current;return typeof c[playerId]==="number"?c[playerId]:0;}
@@ -708,11 +778,16 @@
     state.targetScore="";
     state.scoreMode="running";
     state.keypadType="standard";
+    state.showRank=true;
+    state.showTotal=true;
+    state.showProgress=true;
+    state.showAdjustBtns=true;
     ensureShape(state);
     save();
     gameNameEl.value="";targetEl.value="";
     applyScoreMode("running");
     syncModeMenu();
+    syncDisplayToggles();
     pendingRestore=null;
     renderAll();
     closeMenu();
@@ -1011,7 +1086,8 @@
   function renderCards(){
     cardsEl.innerHTML="";
     state.players.forEach(function(pl){
-      var card=document.createElement("div");card.className="card";card.style.setProperty("--pc",pl.color);card.setAttribute("data-pid",pl.id);
+      var tile=document.createElement("div");tile.className="tile";tile.setAttribute("data-pid",pl.id);tile.style.setProperty("--pc",pl.color);
+      var card=document.createElement("div");card.className="card";card.setAttribute("data-pid",pl.id);
       card.innerHTML=
         '<div class="mini-total"><span class="mini-total-lab">Total</span> <span class="mini-total-val">0</span><span class="rnd-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l6 6L20 6"/></svg></span></div>'+
         '<div class="nameline"><button class="pdot" title="Change colour" aria-label="Change colour"><span class="pdot-in" style="background:'+pl.color+'"></span></button><input class="pname" aria-label="Player name" maxlength="24"><button class="remove" title="Remove player" aria-label="Remove player">×</button></div>'+
@@ -1032,7 +1108,12 @@
       card.querySelector(".plus").addEventListener("click",function(){addAdjustment(pl.id,1);});
       card.querySelector(".minus").addEventListener("click",function(){addAdjustment(pl.id,-1);});
       card.querySelector(".tnum").addEventListener("click",function(){openKeypad(pl.id);});
-      cardsEl.appendChild(card);
+      // .rank-badge lives in .tile, not .card -- .card has overflow:hidden (to clip the
+      // leader glow to its rounded corners) which would otherwise clip the badge too.
+      var badge=document.createElement("span");badge.className="rank-badge";badge.setAttribute("aria-hidden","true");
+      tile.appendChild(card);
+      tile.appendChild(badge);
+      cardsEl.appendChild(tile);
     });
     var add=document.createElement("button");add.className="addplayer";add.textContent="+ Add player";
     add.addEventListener("click",function(){state.players.push({id:uid(),name:"Player "+(state.players.length+1),color:nextColor()});save();renderAll();var inputs=cardsEl.querySelectorAll(".pname");var last=inputs[inputs.length-1];if(last){last.focus();last.select();}});
@@ -1078,7 +1159,11 @@
     for(var idx=0;idx<completed.length;idx++){
       var seg=completed[idx];
       html+='<tr><td class="rndcell"><span class="rlab"><button class="delrnd" data-del="'+seg.markerId+'" title="Delete round" aria-label="Delete round">×</button>R'+(idx+1)+'</span></td>';
-      state.players.forEach(function(pl){var v=seg.scores[pl.id];var val=(typeof v==="number"&&!isNaN(v))?v:"";html+='<td data-cell="'+seg.markerId+'|'+pl.id+'"><input class="scoreinput" inputmode="numeric" type="number" step="1" data-r="'+seg.markerId+'" data-p="'+pl.id+'" value="'+val+'" placeholder="0" aria-label="Score"></td>';});
+      state.players.forEach(function(pl){var v=seg.scores[pl.id];var val=(typeof v==="number"&&!isNaN(v))?v:"";html+='<td data-cell="'+seg.markerId+'|'+pl.id+'"><div class="cell-adj">'+
+        '<button class="adjbtn small minus" data-r="'+seg.markerId+'" data-p="'+pl.id+'" aria-label="Subtract 1">−</button>'+
+        '<input class="scoreinput" inputmode="numeric" type="number" step="1" data-r="'+seg.markerId+'" data-p="'+pl.id+'" value="'+val+'" placeholder="0" aria-label="Score">'+
+        '<button class="adjbtn small plus" data-r="'+seg.markerId+'" data-p="'+pl.id+'" aria-label="Add 1">+</button>'+
+      '</div></td>';});
       html+='</tr>';
     }
     html+='</tbody><tfoot><tr class="totalrow"><td class="rndcell totalcell-lab">Total:</td>';
@@ -1101,7 +1186,21 @@
       });
       inp.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();var all=Array.prototype.slice.call(sheetEl.querySelectorAll(".scoreinput"));var i=all.indexOf(inp);if(i>-1&&i+1<all.length)all[i+1].focus();else inp.blur();}});
     });
-    sheetEl.querySelectorAll(".delrnd").forEach(function(btn){btn.addEventListener("click",function(){deleteRound(btn.getAttribute("data-del"));});});
+    sheetEl.querySelectorAll(".cell-adj .adjbtn").forEach(function(btn){
+      btn.addEventListener("click",function(){
+        var markerId=btn.getAttribute("data-r"),pid=btn.getAttribute("data-p");
+        var input=btn.parentElement.querySelector(".scoreinput");
+        var cur=parseInt(input.value,10);if(isNaN(cur))cur=0;
+        var next=cur+(btn.classList.contains("plus")?1:-1);
+        input.value=next;
+        setSegmentValue(markerId,pid,String(next));
+        save();refreshDynamic();
+      });
+    });
+    sheetEl.querySelectorAll(".delrnd").forEach(function(btn){btn.addEventListener("click",function(){
+      if(!confirm("Delete this round? This can't be undone."))return;
+      deleteRound(btn.getAttribute("data-del"));
+    });});
   }
 
   function markTopScorers(segs){
@@ -1112,23 +1211,53 @@
       state.players.forEach(function(pl){var cell=sheetEl.querySelector('td[data-cell="'+seg.markerId+'|'+pl.id+'"]');if(!cell)return;var v=seg.scores[pl.id];cell.classList.toggle("topscore",max!==null&&typeof v==="number"&&v===max);});
     });
   }
+  function updateSheetTotals(segs){
+    var totalRow=sheetEl.querySelector(".totalrow");if(!totalRow)return;
+    var roundTotals=state.players.map(function(pl){
+      var t=0;segs.completed.forEach(function(seg){var v=seg.scores[pl.id];if(typeof v==="number"&&!isNaN(v))t+=v;});
+      return t;
+    });
+    var maxTotal=roundTotals.length?Math.max.apply(null,roundTotals):null;
+    var cells=totalRow.querySelectorAll(".totalcell");
+    state.players.forEach(function(pl,i){
+      var cell=cells[i];if(!cell)return;
+      cell.textContent=roundTotals[i];
+      cell.classList.toggle("topscore",roundTotals[i]===maxTotal);
+    });
+  }
   function refreshDynamic(){
     var st=standings(),rankById={},totalById={};st.forEach(function(o){rankById[o.pl.id]=o.rank;totalById[o.pl.id]=o.t;});
     var segs=buildSegments();
     var hasActivity=state.rounds.some(function(e){return !e.marker;});
     var target=parseInt(state.targetScore,10),hasTarget=!isNaN(target)&&target>0,anyReached=false;
     var isRounds=state.scoreMode==="rounds";
-    var cards=cardsEl.querySelectorAll(".card");
-    state.players.forEach(function(pl,i){var c=cards[i];if(!c)return;
+    var tiles=cardsEl.querySelectorAll(".tile");
+    state.players.forEach(function(pl,i){var tile=tiles[i];if(!tile)return;var c=tile.querySelector(".card");if(!c)return;
       var total=totalById[pl.id];
       var mini=c.querySelector(".mini-total-val");if(mini)mini.textContent=total;
+      var miniEl=c.querySelector(".mini-total");if(miniEl)miniEl.style.display=state.showTotal?"":"none";
       var entered=isRounds&&Object.prototype.hasOwnProperty.call(segs.current,pl.id);
       c.querySelector(".tnum").textContent=isRounds?(segs.current[pl.id]||0):total;
       c.classList.toggle("rnd-entered",entered);
       c.classList.toggle("rnd-pending",isRounds&&!entered);
-      c.classList.toggle("leader",hasActivity&&rankById[pl.id]===1);
-      var reached=hasTarget&&total>=target;c.classList.toggle("reached",reached);if(reached)anyReached=true;});
-    finishBtn.classList.toggle("ready",anyReached);markTopScorers(segs);updateUndoBtn();
+      var isLeader=hasActivity&&rankById[pl.id]===1;
+      c.classList.toggle("leader",isLeader);
+      tile.classList.toggle("leader",isLeader);
+      var reached=hasTarget&&total>=target;c.classList.toggle("reached",reached);if(reached)anyReached=true;
+      var badge=tile.querySelector(".rank-badge");
+      if(badge){
+        var showBadge=state.showRank&&hasActivity;
+        badge.style.display=showBadge?"flex":"none";
+        if(showBadge){badge.textContent=rankById[pl.id];badge.className="rank-badge tier-"+rankTier(rankById[pl.id]);}
+      }
+      var showRing=hasTarget&&state.showProgress;
+      tile.classList.toggle("has-progress",showRing);
+      if(showRing){
+        var pct=Math.max(0,Math.min(100,total<=0?0:(total/target)*100));
+        tile.style.setProperty("--tile-progress",pct);
+      }
+    });
+    finishBtn.classList.toggle("ready",anyReached);markTopScorers(segs);updateSheetTotals(segs);updateUndoBtn();
   }
   function renderAll(){renderCards();renderSheet();refreshDynamic();}
 
@@ -1282,9 +1411,10 @@
   function clip(ctx,text,maxW){if(ctx.measureText(text).width<=maxW)return text;var t=text;while(t.length>1&&ctx.measureText(t+"…").width>maxW)t=t.slice(0,-1);return t+"…";}
   function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
   function ordinal(n){if(!n)return"—";var s=["th","st","nd","rd"],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}
+  function rankTier(rank){return rank===1?"gold":rank===2?"silver":rank===3?"bronze":"plain";}
   function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
 
-  buildThemeMenu();buildModeMenu();buildScoreModeMenu();applyTheme(currentTheme);applyScoreMode(state.scoreMode);
+  buildThemeMenu();buildModeMenu();buildScoreModeMenu();applyTheme(currentTheme);syncDisplayToggles();applyScoreMode(state.scoreMode);
   if(!state.seenGuide)openGuide();
 })();
 </script>
