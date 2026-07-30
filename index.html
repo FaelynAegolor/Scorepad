@@ -541,11 +541,15 @@
     var l=document.getElementById("mode-list");l.innerHTML="";
     Object.keys(MODES).forEach(function(id){
       var m=MODES[id];
-      var b=document.createElement("button");b.className="mode-opt";
+      var b=document.createElement("button");b.className="mode-opt";b.setAttribute("data-mode",id);
       b.innerHTML="<b>"+esc(m.label)+"</b><small>"+esc(m.note)+"</small>";
       b.addEventListener("click",function(){selectMode(id);});
       l.appendChild(b);
     });
+    syncModeMenu();
+  }
+  function syncModeMenu(){
+    document.querySelectorAll(".mode-opt").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-mode")===state.keypadType);});
   }
   function selectMode(id){
     var m=MODES[id];if(!m)return;
@@ -555,7 +559,7 @@
     state.targetScore=m.target||"";
     targetEl.value=state.targetScore;
     state.keypadType=m.keypad||"standard";
-    save();refreshDynamic();closeMenu();
+    save();syncModeMenu();refreshDynamic();closeMenu();
   }
 
   function buildScoreModeMenu(){
@@ -676,6 +680,7 @@
     save();
     gameNameEl.value="";targetEl.value="";
     applyScoreMode("running");
+    syncModeMenu();
     pendingRestore=null;
     renderAll();
     closeMenu();
