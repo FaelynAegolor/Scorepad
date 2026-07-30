@@ -90,13 +90,24 @@
   .section-label::after{content:"";flex:1;height:1px;background:var(--line)}
 
   .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+  /* registers --tile-progress as an animatable number (rather than an opaque string) so the
+     transition below can tween it frame-by-frame -- conic-gradient() itself can't be
+     transitioned, but recalculating it every frame from a smoothly-changing number reads
+     as a smooth sweep. Unsupported browsers just fall back to an instant jump. */
+  @property --tile-progress{syntax:'<number>';inherits:true;initial-value:0}
   .tile{position:relative}
+  .tile.has-progress{transition:--tile-progress .6s ease}
   /* target-progress ring: a conic-gradient "donut" clipped down to just its outer edge
      via the padding+mask-composite trick, traced around the same rounded rect as .card.
-     Lives on .tile (not .card, which has overflow:hidden) so it isn't clipped either. */
+     Lives on .tile (not .card, which has overflow:hidden) so it isn't clipped either.
+     Uses gold rather than the player's own colour (--pc) so it stays legible against
+     the leader glow, which is drawn in --pc and would otherwise blend right into it --
+     and sits inset a couple of px from the card edge so it reads as a distinct ring
+     from the leader's edge-hugging box-shadow even when a player's own colour is
+     itself gold/amber (palette has one: #eab308). */
   .tile.has-progress::after{
-    content:"";position:absolute;inset:0;border-radius:var(--radius);padding:2.5px;
-    background:conic-gradient(var(--pc) calc(var(--tile-progress,0) * 1%),color-mix(in srgb, var(--text) 14%, transparent) 0);
+    content:"";position:absolute;inset:2px;border-radius:calc(var(--radius) - 2px);padding:2.5px;
+    background:conic-gradient(var(--gold) calc(var(--tile-progress,0) * 1%),color-mix(in srgb, var(--text) 14%, transparent) 0);
     -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
     -webkit-mask-composite:xor;mask-composite:exclude;
     pointer-events:none;z-index:1;transition:background .25s;
@@ -191,17 +202,22 @@
 
   /* running-score mode */
   body[data-scoremode="running"] #sheet-block{display:none}
-  .adjbtn{width:36px;height:36px;padding:0;border:1.5px solid var(--line);background:transparent;color:var(--text);border-radius:10px;font:inherit;font-weight:700;font-size:20px;cursor:pointer;transition:.12s;line-height:1;flex:none;display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
-  .adjbtn:hover{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,transparent)}
+  .adjbtn{width:36px;height:36px;padding:0;border:1.5px solid var(--line);background:transparent;color:var(--text);border-radius:10px;font:inherit;font-weight:700;font-size:20px;cursor:pointer;transition:border-color .12s,color .12s,background-color .12s;line-height:1;flex:none;display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
+  @media (hover:hover){
+    .adjbtn:hover{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,transparent)}
+    .cell-adj .adjbtn:hover{opacity:1;border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
+  }
   .adjbtn:active{transform:scale(.9)}
   .adjbtn.small{width:24px;height:24px;border-radius:7px;font-size:14px;flex:none}
+  .adjbtn.flash-plus{border-color:#22c55e;color:#22c55e;background:color-mix(in srgb,#22c55e 16%,transparent)}
+  .adjbtn.flash-minus{border-color:#ef4444;color:#ef4444;background:color-mix(in srgb,#ef4444 16%,transparent)}
   .cell-adj{display:flex;align-items:center;justify-content:center;gap:4px;padding:8px 4px}
   .cell-adj .scoreinput{padding:0;width:100%;min-width:0}
   /* the round table sits on the light "paper" surface, not the dark panel .adjbtn was
      designed for -- var(--text) is a light colour there and was rendering invisible */
   .cell-adj .adjbtn{border-color:var(--paper-line);color:var(--ink-soft);opacity:.55}
-  .cell-adj .adjbtn:hover{opacity:1;border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
   .cell-adj .adjbtn:active{opacity:1;transform:scale(.9)}
+  .cell-adj .adjbtn.flash-plus,.cell-adj .adjbtn.flash-minus{opacity:1}
   body.hide-adjbtns .adjbtn{display:none}
   body.hide-adjbtns .cell-adj{padding:14px 6px}
   .ticker{position:absolute;top:-16px;left:50%;background:#22c55e;color:#fff;font-family:var(--font-mono);font-weight:700;font-size:13px;padding:2px 10px;border-radius:999px;white-space:nowrap;pointer-events:none;opacity:0;transform:translateX(-50%) translateY(4px);transition:opacity .18s ease-out,transform .22s ease-out;z-index:3;letter-spacing:.5px;box-shadow:0 4px 12px -4px rgba(0,0,0,.35)}
@@ -273,6 +289,10 @@
   .kpa-minus:hover{border-color:var(--muted)}
   .kpa-plus{background:var(--accent);color:#fff}
   .kpa-plus:hover{background:var(--accent-press)}
+  .kpa-minus.kpa-danger{background:#ef4444;color:#fff;border-color:#ef4444}
+  .kpa-minus.kpa-danger:hover{background:#dc3535}
+  .kpa-plus.kpa-heal{background:#22c55e}
+  .kpa-plus.kpa-heal:hover{background:#1ea854}
   @keyframes pulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--gold) 50%,transparent)}50%{box-shadow:0 0 0 8px transparent}}
 
   .empty{text-align:center;color:var(--muted);font-size:14px;line-height:1.6;padding:26px 16px;border:1.5px dashed var(--line);border-radius:var(--radius)}
@@ -571,6 +591,7 @@
     if(typeof s.showProgress!=="boolean")s.showProgress=true;
     if(typeof s.showAdjustBtns!=="boolean")s.showAdjustBtns=true;
     if(typeof s.countdown!=="boolean")s.countdown=false;
+    if(typeof s.gameNameCustom!=="boolean")s.gameNameCustom=false;
     var used=s.players.map(function(p){return p.color;}).filter(Boolean);
     s.players.forEach(function(p){if(!p.color){var c=PALETTE.filter(function(x){return used.indexOf(x)<0;})[0]||PALETTE[used.length%PALETTE.length];p.color=c;used.push(c);}});
   }
@@ -609,7 +630,7 @@
   var menuBtn=document.getElementById("menubtn"),menuEl=document.getElementById("menu");
 
   gameNameEl.value=state.gameName||"";
-  gameNameEl.addEventListener("input",function(){state.gameName=gameNameEl.value;save();});
+  gameNameEl.addEventListener("input",function(){state.gameName=gameNameEl.value;state.gameNameCustom=true;save();});
   targetEl.value=state.targetScore||"";
   targetEl.addEventListener("input",function(){state.targetScore=targetEl.value;save();refreshDynamic();});
 
@@ -650,8 +671,8 @@
   }
   function selectMode(id){
     var m=MODES[id];if(!m)return;
-    if(m.name&&!(state.gameName||"").trim()){
-      state.gameName=m.name;gameNameEl.value=m.name;
+    if(!state.gameNameCustom){
+      state.gameName=m.name||"";gameNameEl.value=state.gameName;
     }
     state.targetScore=m.target||"";
     targetEl.value=state.targetScore;
@@ -703,6 +724,16 @@
   document.getElementById("total-toggle").addEventListener("click",function(){applyDisplayToggle("showTotal",!state.showTotal);});
   document.getElementById("progress-toggle").addEventListener("click",function(){applyDisplayToggle("showProgress",!state.showProgress);});
   document.getElementById("adjbtns-toggle").addEventListener("click",function(){applyDisplayToggle("showAdjustBtns",!state.showAdjustBtns);});
+
+  // Timed press feedback for +/- buttons: flash green/red then revert after 2s, instead of
+  // relying on CSS :hover (which sticks indefinitely on touchscreens with no mouse to "unhover").
+  function flashAdjBtn(btn,isPlus){
+    var cls=isPlus?"flash-plus":"flash-minus";
+    btn.classList.remove("flash-plus","flash-minus");
+    btn.classList.add(cls);
+    clearTimeout(btn._flashTimer);
+    btn._flashTimer=setTimeout(function(){btn.classList.remove(cls);},2000);
+  }
 
   var tickers={};
   function pendingHas(playerId){return Object.prototype.hasOwnProperty.call(buildSegments().current,playerId);}
@@ -793,6 +824,7 @@
     Object.keys(tickers).forEach(function(k){if(tickers[k]&&tickers[k].timeoutId)clearTimeout(tickers[k].timeoutId);});
     tickers={};
     state.gameName="";
+    state.gameNameCustom=false;
     state.players=[mk("Player 1"),mk("Player 2")];
     state.rounds=[];
     state.targetScore="";
@@ -921,7 +953,12 @@
     var row=document.getElementById("kp-quickrow");
     var minusBtn=document.getElementById("kp-minus"),plusBtn=document.getElementById("kp-plus");
     var vals=QUICK_VALUES[state.keypadType];
-    if(!vals){row.hidden=true;row.innerHTML="";minusBtn.textContent="− Subtract";plusBtn.textContent="Add +";return;}
+    if(!vals){
+      row.hidden=true;row.innerHTML="";
+      minusBtn.textContent="− Subtract";plusBtn.textContent="Add +";
+      minusBtn.classList.remove("kpa-danger");plusBtn.classList.remove("kpa-heal");
+      return;
+    }
     row.hidden=false;
     var cols=state.keypadType==="starrealms"?6:4;
     var html='<div class="pk-lab">Quick '+(state.keypadType==="starrealms"?"damage":"LP")+' — tap to fill</div>'+
@@ -934,6 +971,8 @@
     } else {
       minusBtn.textContent="− Damage";plusBtn.textContent="Heal +";
     }
+    minusBtn.classList.add("kpa-danger");
+    plusBtn.classList.add("kpa-heal");
     row.innerHTML=html;
     row.querySelectorAll("[data-quick]").forEach(function(b){
       b.addEventListener("click",function(){kpState.value=b.getAttribute("data-quick");updateKpDisplay();});
@@ -1207,8 +1246,8 @@
         state.rounds.forEach(function(r){if(!r.marker)delete r.scores[pl.id];});
         save();renderAll();
       });
-      card.querySelector(".plus").addEventListener("click",function(){addAdjustment(pl.id,1);});
-      card.querySelector(".minus").addEventListener("click",function(){addAdjustment(pl.id,-1);});
+      card.querySelector(".plus").addEventListener("click",function(e){flashAdjBtn(e.currentTarget,true);addAdjustment(pl.id,1);});
+      card.querySelector(".minus").addEventListener("click",function(e){flashAdjBtn(e.currentTarget,false);addAdjustment(pl.id,-1);});
       card.querySelector(".tnum").addEventListener("click",function(){openKeypad(pl.id);});
       // .rank-badge lives in .tile, not .card -- .card has overflow:hidden (to clip the
       // leader glow to its rounded corners) which would otherwise clip the badge too.
@@ -1291,10 +1330,12 @@
     });
     sheetEl.querySelectorAll(".cell-adj .adjbtn").forEach(function(btn){
       btn.addEventListener("click",function(){
+        var isPlus=btn.classList.contains("plus");
+        flashAdjBtn(btn,isPlus);
         var markerId=btn.getAttribute("data-r"),pid=btn.getAttribute("data-p");
         var input=btn.parentElement.querySelector(".scoreinput");
         var cur=parseInt(input.value,10);if(isNaN(cur))cur=0;
-        var next=cur+(btn.classList.contains("plus")?1:-1);
+        var next=cur+(isPlus?1:-1);
         input.value=next;
         setSegmentValue(markerId,pid,String(next));
         save();refreshDynamic();
