@@ -110,6 +110,18 @@
   .reached-pill{display:none;margin:12px auto 0;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--on-gold);background:var(--gold);padding:3px 10px;border-radius:999px;width:fit-content}
   .card.reached .reached-pill{display:block}
 
+  .mini-total{display:none;align-items:center;font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin:-2px 0 8px}
+  .mini-total-val{font-size:13px;color:var(--text);letter-spacing:0;text-transform:none;margin-left:4px}
+  body[data-scoremode="rounds"] .mini-total{display:flex}
+  body[data-scoremode="rounds"] .card{transition:background .2s,border-color .2s,transform .25s,box-shadow .25s,opacity .2s}
+  body[data-scoremode="rounds"] .card.rnd-pending{border-color:color-mix(in srgb, var(--accent) 55%, var(--line))}
+  body[data-scoremode="rounds"] .card.rnd-entered{background:color-mix(in srgb, var(--panel) 58%, #000 42%);border-color:color-mix(in srgb, var(--line) 45%, #000 40%);opacity:.9}
+  body[data-scoremode="rounds"] .card.rnd-entered .tnum{opacity:.45}
+  body[data-scoremode="rounds"] .card.rnd-entered .mini-total{opacity:.8}
+  .rnd-check{margin-left:auto;width:18px;height:18px;flex:none;border-radius:50%;background:#22c55e;color:#fff;display:flex;align-items:center;justify-content:center;opacity:0;transform:scale(.4);transition:opacity .18s ease-out,transform .18s ease-out}
+  .rnd-check svg{width:10px;height:10px}
+  body[data-scoremode="rounds"] .card.rnd-entered .rnd-check{opacity:1;transform:scale(1)}
+
   .addplayer{display:flex;align-items:center;justify-content:center;gap:8px;background:transparent;border:1.5px dashed var(--line);border-radius:var(--radius);color:var(--muted);font:inherit;font-weight:600;font-size:14px;cursor:pointer;min-height:96px;transition:.15s}
   .addplayer:hover{border-color:var(--accent);color:var(--accent)}
 
@@ -127,12 +139,15 @@
   .rndcell .rlab{display:inline-flex;align-items:center;gap:8px}
   .delrnd{border:none;background:transparent;color:var(--ink-soft);opacity:.6;cursor:pointer;font-size:15px;line-height:1;padding:2px;border-radius:5px;transition:.15s}
   .delrnd:hover{color:var(--accent-press);opacity:1}
-  .scoreinput{width:100%;min-width:64px;border:none;background:transparent;text-align:center;font-family:var(--font-mono);font-weight:700;font-size:17px;color:var(--ink);padding:14px 6px;font-variant-numeric:tabular-nums}
+  .scoreinput{width:100%;min-width:64px;border:none;background:transparent;text-align:center;font-family:var(--font-mono);font-weight:700;font-size:17px;color:var(--ink);padding:14px 6px;font-variant-numeric:tabular-nums;-moz-appearance:textfield}
   .scoreinput::placeholder{color:var(--ink-soft);opacity:.45;font-weight:400}
   .scoreinput:focus{outline:none;background:color-mix(in srgb,var(--accent) 12%,transparent)}
+  .scoreinput::-webkit-outer-spin-button,.scoreinput::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
   td.topscore{position:relative}
   td.topscore .scoreinput{font-weight:700}
   td.topscore::after{content:"";position:absolute;left:50%;bottom:6px;transform:translateX(-50%);width:18px;height:3px;border-radius:2px;background:var(--gold)}
+  tfoot .totalrow td{padding:14px 6px;border-top:2px solid var(--paper-line);border-bottom:none;background:transparent;font-family:var(--font-mono);font-weight:700;font-size:17px;color:var(--ink);text-align:center;font-variant-numeric:tabular-nums}
+  tfoot .totalcell-lab{position:sticky;left:0;background:var(--paper);font-family:var(--font-body);font-weight:700;font-size:12px;color:var(--ink-soft);text-align:right;padding:14px 10px 14px 6px}
 
   .addround{width:100%;margin-top:12px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font:inherit;font-weight:700;font-size:15px;padding:15px;cursor:pointer;transition:.15s;letter-spacing:.2px;box-shadow:0 10px 24px -12px rgba(0,0,0,.55)}
   .addround:hover{background:var(--accent-press)}
@@ -373,7 +388,7 @@
     <ol class="guide-list">
       <li><span class="guide-num">1</span><div><b>Name your crew</b><p>Tap the placeholder names to swap in real ones. Tap a coloured dot to change a player's colour — everyone gets their own, so there's no more "wait, which line is mine?"</p></div></li>
       <li><span class="guide-num">2</span><div><b>Rack up the points</b><p>Tap − or + beside a score to nudge, or tap the number itself for a proper keypad. The little pill that pops up above tracks your recent taps, so you can spot a fumble before it's set in stone.</p></div></li>
-      <li><span class="guide-num">3</span><div><b>Prefer a scoresheet?</b><p>Flick on Round-by-round mode from the menu (top right) to log each hand as a row. Flip 7 and Sushi Go! presets are in there too — one tap and the app knows the rules better than half the table.</p></div></li>
+      <li><span class="guide-num">3</span><div><b>Prefer a scoresheet?</b><p>Flick on Round-by-round mode from the menu (top right). Enter each player's score on their tile — the tile darkens once it's in — then tap "Add round" to lock the hand in. Flip 7 and Sushi Go! presets are in there too — one tap and the app knows the rules better than half the table.</p></div></li>
       <li><span class="guide-num">4</span><div><b>Crown the winner</b><p>When the dust settles, tap Finish game for a winner banner, ranked standings, and a shareable image for the group chat. Bragging rights, saved forever.</p></div></li>
     </ol>
     <div class="guide-foot">Everything lives on your device — no accounts, works offline, free forever. Cross our hearts.</div>
@@ -386,7 +401,7 @@
     <button class="guide-x" id="kp-close" aria-label="Close keypad">×</button>
     <div class="kp-eyebrow">Adjust score</div>
     <div class="kp-name" id="kp-name">—</div>
-    <div class="kp-current">current <span id="kp-current">0</span></div>
+    <div class="kp-current"><span id="kp-current-lab">current</span> <span id="kp-current">0</span></div>
     <div class="kp-picker" id="kp-picker" hidden></div>
     <div class="kp-numeric" id="kp-numeric">
     <div class="kp-display" id="kp-display">0</div>
@@ -455,6 +470,7 @@
   function uid(){return Math.random().toString(36).slice(2,9);}
   function ensureShape(s){
     s.gameName=s.gameName||"";s.players=s.players||[];s.rounds=s.rounds||[];
+    delete s.pending;
     if(s.targetScore===undefined)s.targetScore="";if(!s.theme||!THEMES[s.theme])s.theme="felt";
     if(s.scoreMode!=="rounds")s.scoreMode="running";
     if(["standard","flip7","sushigo"].indexOf(s.keypadType)<0)s.keypadType="standard";
@@ -465,7 +481,24 @@
   function load(){if(!canStore)return null;try{var r=localStorage.getItem(KEY);return r?JSON.parse(r):null;}catch(e){return null;}}
   function save(){if(!canStore)return;try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
 
-  function totalFor(pid){var t=0;for(var i=0;i<state.rounds.length;i++){var v=state.rounds[i].scores[pid];if(typeof v==="number"&&!isNaN(v))t+=v;}return t;}
+  function totalFor(pid){var t=0;for(var i=0;i<state.rounds.length;i++){var e=state.rounds[i];if(e.marker)continue;var v=e.scores[pid];if(typeof v==="number"&&!isNaN(v))t+=v;}return t;}
+  // state.rounds is a flat chronological ledger of scoring entries {id,scores:{pid:delta}}
+  // interleaved with round markers {id,marker:true}. A "round" (for round-by-round display)
+  // is just the sum of entries between two markers — this lets running-score taps and
+  // round-by-round entries share one history and freely switch mid-game.
+  function buildSegments(){
+    var completed=[],cur={};
+    state.rounds.forEach(function(e){
+      if(e.marker){completed.push({markerId:e.id,scores:cur});cur={};}
+      else{
+        Object.keys(e.scores).forEach(function(pid){
+          var v=e.scores[pid];
+          if(typeof v==="number"&&!isNaN(v))cur[pid]=(cur[pid]||0)+v;
+        });
+      }
+    });
+    return{completed:completed,current:cur};
+  }
   function standings(){
     var arr=state.players.map(function(pl){return{pl:pl,t:totalFor(pl.id)};});
     arr.sort(function(a,b){return b.t-a.t;});
@@ -538,7 +571,7 @@
   function applyScoreMode(id){
     if(id!=="rounds"&&id!=="running")id="running";
     state.scoreMode=id;document.body.setAttribute("data-scoremode",id);
-    save();syncScoreModeMenu();refreshDynamic();
+    save();syncScoreModeMenu();renderAll();
   }
   function syncScoreModeMenu(){
     var t=document.getElementById("rounds-toggle");
@@ -546,32 +579,21 @@
   }
 
   var tickers={};
+  function pendingHas(playerId){return Object.prototype.hasOwnProperty.call(buildSegments().current,playerId);}
+  function pendingScoreFor(playerId){var c=buildSegments().current;return typeof c[playerId]==="number"?c[playerId]:0;}
+  // Writes are the same regardless of scoring mode — every tap/keypad action appends to (or
+  // merges into) the shared ledger. Round-by-round mode just displays activity since the last
+  // marker; running mode displays the grand total. This is what lets you switch modes mid-game.
   function addAdjustment(playerId,delta){
     pendingRestore=null;
-    if(state.scoreMode==="rounds"){
-      // Rounds mode: update the last existing round. Do NOT create a new one.
-      if(!state.rounds.length)return;
-      var lastR=state.rounds[state.rounds.length-1];
-      var prev=lastR.scores[playerId];
-      var prevN=(typeof prev==="number"&&!isNaN(prev))?prev:0;
-      var next=prevN+delta;
-      if(next===0)delete lastR.scores[playerId];
-      else lastR.scores[playerId]=next;
-      save();
-      updateTicker(playerId,delta);
-      var input=sheetEl.querySelector('.scoreinput[data-r="'+lastR.id+'"][data-p="'+playerId+'"]');
-      if(input)input.value=lastR.scores[playerId]!==undefined?lastR.scores[playerId]:"";
-      refreshDynamic();
-      return;
-    }
     var now=Date.now();
     var t=tickers[playerId];
     var withinWindow=t&&(now-t.lastTime)<2000;
-    var lastRound=state.rounds.length?state.rounds[state.rounds.length-1]:null;
-    var canMerge=withinWindow&&lastRound&&Object.keys(lastRound.scores).length===1&&lastRound.scores[playerId]!==undefined;
+    var lastEntry=state.rounds.length?state.rounds[state.rounds.length-1]:null;
+    var canMerge=withinWindow&&lastEntry&&!lastEntry.marker&&Object.keys(lastEntry.scores).length===1&&lastEntry.scores[playerId]!==undefined;
     if(canMerge){
-      lastRound.scores[playerId]+=delta;
-      if(lastRound.scores[playerId]===0)state.rounds.pop();
+      lastEntry.scores[playerId]+=delta;
+      if(lastEntry.scores[playerId]===0)state.rounds.pop();
     } else {
       var r={id:uid(),scores:{}};r.scores[playerId]=delta;
       state.rounds.push(r);
@@ -676,7 +698,13 @@
     kpState.playerId=playerId;kpState.value="";
     document.getElementById("kp-name").textContent=pl.name||"—";
     document.getElementById("kp-name").style.color=pl.color;
-    document.getElementById("kp-current").textContent=totalFor(playerId);
+    if(state.scoreMode==="rounds"){
+      document.getElementById("kp-current-lab").textContent="this round";
+      document.getElementById("kp-current").textContent=pendingScoreFor(playerId);
+    } else {
+      document.getElementById("kp-current-lab").textContent="current";
+      document.getElementById("kp-current").textContent=totalFor(playerId);
+    }
     buildPicker();
     updateKpDisplay();kpOverlay.hidden=false;
   }
@@ -717,7 +745,13 @@
         b.classList.toggle("on",!!s[m]);updateFlip7();
       });
     });
-    document.getElementById("pk-bust").addEventListener("click",function(){closeKeypad();});
+    document.getElementById("pk-bust").addEventListener("click",function(){
+      if(state.scoreMode==="rounds"){
+        var entry={id:uid(),scores:{}};entry.scores[kpState.playerId]=0;
+        state.rounds.push(entry);save();refreshDynamic();
+      }
+      closeKeypad();
+    });
     document.getElementById("pk-add").addEventListener("click",function(){
       var t=calcFlip7();addAdjustment(kpState.playerId,t);closeKeypad();
     });
@@ -852,7 +886,7 @@
   document.getElementById("undo-btn").addEventListener("click",function(){
     if(pendingRestore){
       state.players.splice(pendingRestore.index,0,pendingRestore.player);
-      state.rounds.forEach(function(r){if(pendingRestore.scores[r.id]!==undefined)r.scores[pendingRestore.player.id]=pendingRestore.scores[r.id];});
+      state.rounds.forEach(function(r){if(!r.marker&&pendingRestore.scores[r.id]!==undefined)r.scores[pendingRestore.player.id]=pendingRestore.scores[r.id];});
       pendingRestore=null;save();renderAll();return;
     }
     if(!state.rounds.length)return;
@@ -867,6 +901,7 @@
     }
     if(!state.rounds.length){btn.disabled=true;btn.textContent="Nothing to undo";return;}
     var last=state.rounds[state.rounds.length-1];
+    if(last.marker){btn.disabled=false;btn.textContent="Undo last round";return;}
     var pids=Object.keys(last.scores);
     if(pids.length===1){
       var pl=state.players.filter(function(p){return p.id===pids[0];})[0];
@@ -874,7 +909,7 @@
       btn.disabled=false;btn.textContent="Undo "+((pl?pl.name:"?")||"—")+" "+sign+d;
     } else {
       btn.disabled=false;
-      btn.textContent="Undo last round";
+      btn.textContent="Undo last entry";
     }
   }
 
@@ -884,6 +919,7 @@
     state.players.forEach(function(pl){
       var card=document.createElement("div");card.className="card";card.style.setProperty("--pc",pl.color);card.setAttribute("data-pid",pl.id);
       card.innerHTML=
+        '<div class="mini-total"><span class="mini-total-lab">Total</span> <span class="mini-total-val">0</span><span class="rnd-check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l6 6L20 6"/></svg></span></div>'+
         '<div class="nameline"><button class="pdot" title="Change colour" aria-label="Change colour"><span class="pdot-in" style="background:'+pl.color+'"></span></button><input class="pname" aria-label="Player name" maxlength="24"><button class="remove" title="Remove player" aria-label="Remove player">×</button></div>'+
         '<div class="score-block"><div class="score-row"><button class="adjbtn minus" aria-label="Subtract 1">−</button><span class="tnum" title="Tap to open keypad">0</span><button class="adjbtn plus" aria-label="Add 1">+</button><span class="ticker" aria-hidden="true"></span></div><small>pts</small></div>'+
         '<span class="reached-pill">target reached</span>';
@@ -893,10 +929,10 @@
       card.querySelector(".remove").addEventListener("click",function(){
         var idx=state.players.indexOf(pl);
         var savedScores={};
-        state.rounds.forEach(function(r){if(r.scores[pl.id]!==undefined)savedScores[r.id]=r.scores[pl.id];});
+        state.rounds.forEach(function(r){if(!r.marker&&r.scores[pl.id]!==undefined)savedScores[r.id]=r.scores[pl.id];});
         pendingRestore={player:pl,index:idx,scores:savedScores};
         state.players=state.players.filter(function(x){return x.id!==pl.id;});
-        state.rounds.forEach(function(r){delete r.scores[pl.id];});
+        state.rounds.forEach(function(r){if(!r.marker)delete r.scores[pl.id];});
         save();renderAll();
       });
       card.querySelector(".plus").addEventListener("click",function(){addAdjustment(pl.id,1);});
@@ -909,56 +945,105 @@
     cardsEl.appendChild(add);
   }
 
+  function setSegmentValue(markerId,pid,raw){
+    var markerIdx=state.rounds.findIndex(function(e){return e.id===markerId;});
+    if(markerIdx<0)return;
+    var startIdx=0;
+    for(var i=markerIdx-1;i>=0;i--){if(state.rounds[i].marker){startIdx=i+1;break;}}
+    for(var j=markerIdx-1;j>=startIdx;j--){
+      var e=state.rounds[j];
+      if(!e.marker&&Object.prototype.hasOwnProperty.call(e.scores,pid)){
+        delete e.scores[pid];
+        if(!Object.keys(e.scores).length){state.rounds.splice(j,1);markerIdx--;}
+      }
+    }
+    if(raw!==""&&raw!=="-"){
+      var val=parseInt(raw,10);
+      if(!isNaN(val)){
+        var entry={id:uid(),scores:{}};entry.scores[pid]=val;
+        state.rounds.splice(markerIdx,0,entry);
+      }
+    }
+  }
+  function deleteRound(markerId){
+    var markerIdx=state.rounds.findIndex(function(e){return e.id===markerId;});
+    if(markerIdx<0)return;
+    var startIdx=0;
+    for(var i=markerIdx-1;i>=0;i--){if(state.rounds[i].marker){startIdx=i+1;break;}}
+    state.rounds.splice(startIdx,markerIdx-startIdx+1);
+    save();renderAll();
+  }
+
   function renderSheet(){
     if(!state.players.length){sheetEl.innerHTML='<div class="empty">Add a player above to start keeping score.</div>';return;}
-    if(!state.rounds.length){sheetEl.innerHTML='<div class="empty"><b>No rounds yet.</b><br>Tap “Add round” to log the first hand.</div>';return;}
+    var completed=buildSegments().completed;
+    if(!completed.length){sheetEl.innerHTML='<div class="empty"><b>No rounds yet.</b><br>Enter each player’s score on their tile above, then tap “Add round”.</div>';return;}
     var html='<div class="sheet-scroll"><table><thead><tr><th class="rndhead">Round</th>';
     state.players.forEach(function(pl){html+='<th data-head="'+pl.id+'"><span class="hname"><span class="hdot" style="background:'+pl.color+'"></span><span class="htext">'+esc(pl.name||"—")+'</span></span></th>';});
     html+='</tr></thead><tbody>';
-    state.rounds.forEach(function(r,idx){
-      html+='<tr><td class="rndcell"><span class="rlab"><button class="delrnd" data-del="'+r.id+'" title="Delete round" aria-label="Delete round">×</button>R'+(idx+1)+'</span></td>';
-      state.players.forEach(function(pl){var v=r.scores[pl.id];var val=(typeof v==="number"&&!isNaN(v))?v:"";html+='<td data-cell="'+r.id+'|'+pl.id+'"><input class="scoreinput" inputmode="numeric" type="number" step="1" data-r="'+r.id+'" data-p="'+pl.id+'" value="'+val+'" placeholder="0" aria-label="Score"></td>';});
+    for(var idx=0;idx<completed.length;idx++){
+      var seg=completed[idx];
+      html+='<tr><td class="rndcell"><span class="rlab"><button class="delrnd" data-del="'+seg.markerId+'" title="Delete round" aria-label="Delete round">×</button>R'+(idx+1)+'</span></td>';
+      state.players.forEach(function(pl){var v=seg.scores[pl.id];var val=(typeof v==="number"&&!isNaN(v))?v:"";html+='<td data-cell="'+seg.markerId+'|'+pl.id+'"><input class="scoreinput" inputmode="numeric" type="number" step="1" data-r="'+seg.markerId+'" data-p="'+pl.id+'" value="'+val+'" placeholder="0" aria-label="Score"></td>';});
       html+='</tr>';
+    }
+    html+='</tbody><tfoot><tr class="totalrow"><td class="rndcell totalcell-lab">Total:</td>';
+    var roundTotals=state.players.map(function(pl){
+      var t=0;completed.forEach(function(seg){var v=seg.scores[pl.id];if(typeof v==="number"&&!isNaN(v))t+=v;});
+      return t;
     });
-    html+='</tbody></table></div>';
+    var maxTotal=roundTotals.length?Math.max.apply(null,roundTotals):null;
+    state.players.forEach(function(pl,i){
+      var t=roundTotals[i];
+      html+='<td class="totalcell'+(t===maxTotal?' topscore':'')+'">'+t+'</td>';
+    });
+    html+='</tr></tfoot></table></div>';
     sheetEl.innerHTML=html;
     sheetEl.querySelectorAll(".scoreinput").forEach(function(inp){
       inp.addEventListener("input",function(){
-        var rid=inp.getAttribute("data-r"),pid=inp.getAttribute("data-p");
-        var round=state.rounds.filter(function(x){return x.id===rid;})[0];if(!round)return;
-        var raw=inp.value.trim();if(raw===""||raw==="-")delete round.scores[pid];else round.scores[pid]=parseInt(raw,10);
+        var markerId=inp.getAttribute("data-r"),pid=inp.getAttribute("data-p");
+        setSegmentValue(markerId,pid,inp.value.trim());
         save();refreshDynamic();
       });
       inp.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();var all=Array.prototype.slice.call(sheetEl.querySelectorAll(".scoreinput"));var i=all.indexOf(inp);if(i>-1&&i+1<all.length)all[i+1].focus();else inp.blur();}});
     });
-    sheetEl.querySelectorAll(".delrnd").forEach(function(btn){btn.addEventListener("click",function(){state.rounds=state.rounds.filter(function(x){return x.id!==btn.getAttribute("data-del");});save();renderAll();});});
+    sheetEl.querySelectorAll(".delrnd").forEach(function(btn){btn.addEventListener("click",function(){deleteRound(btn.getAttribute("data-del"));});});
   }
 
-  function markTopScorers(){
+  function markTopScorers(segs){
     if(!sheetEl.querySelector("table"))return;
-    state.rounds.forEach(function(r){
-      var present=[];state.players.forEach(function(pl){var v=r.scores[pl.id];if(typeof v==="number"&&!isNaN(v))present.push(v);});
+    segs.completed.forEach(function(seg){
+      var present=[];state.players.forEach(function(pl){var v=seg.scores[pl.id];if(typeof v==="number"&&!isNaN(v))present.push(v);});
       var max=present.length?Math.max.apply(null,present):null;
-      state.players.forEach(function(pl){var cell=sheetEl.querySelector('td[data-cell="'+r.id+'|'+pl.id+'"]');if(!cell)return;var v=r.scores[pl.id];cell.classList.toggle("topscore",max!==null&&typeof v==="number"&&v===max);});
+      state.players.forEach(function(pl){var cell=sheetEl.querySelector('td[data-cell="'+seg.markerId+'|'+pl.id+'"]');if(!cell)return;var v=seg.scores[pl.id];cell.classList.toggle("topscore",max!==null&&typeof v==="number"&&v===max);});
     });
   }
   function refreshDynamic(){
     var st=standings(),rankById={},totalById={};st.forEach(function(o){rankById[o.pl.id]=o.rank;totalById[o.pl.id]=o.t;});
-    var hasRounds=state.rounds.length>0,target=parseInt(state.targetScore,10),hasTarget=!isNaN(target)&&target>0,anyReached=false;
+    var segs=buildSegments();
+    var hasActivity=state.rounds.some(function(e){return !e.marker;});
+    var target=parseInt(state.targetScore,10),hasTarget=!isNaN(target)&&target>0,anyReached=false;
+    var isRounds=state.scoreMode==="rounds";
     var cards=cardsEl.querySelectorAll(".card");
     state.players.forEach(function(pl,i){var c=cards[i];if(!c)return;
-      c.querySelector(".tnum").textContent=totalById[pl.id];
-      c.classList.toggle("leader",hasRounds&&rankById[pl.id]===1);
-      var reached=hasTarget&&totalById[pl.id]>=target;c.classList.toggle("reached",reached);if(reached)anyReached=true;});
-    finishBtn.classList.toggle("ready",anyReached);markTopScorers();updateUndoBtn();
+      var total=totalById[pl.id];
+      var mini=c.querySelector(".mini-total-val");if(mini)mini.textContent=total;
+      var entered=isRounds&&Object.prototype.hasOwnProperty.call(segs.current,pl.id);
+      c.querySelector(".tnum").textContent=isRounds?(segs.current[pl.id]||0):total;
+      c.classList.toggle("rnd-entered",entered);
+      c.classList.toggle("rnd-pending",isRounds&&!entered);
+      c.classList.toggle("leader",hasActivity&&rankById[pl.id]===1);
+      var reached=hasTarget&&total>=target;c.classList.toggle("reached",reached);if(reached)anyReached=true;});
+    finishBtn.classList.toggle("ready",anyReached);markTopScorers(segs);updateUndoBtn();
   }
   function renderAll(){renderCards();renderSheet();refreshDynamic();}
 
   document.getElementById("addround").addEventListener("click",function(){
     if(!state.players.length){alert("Add at least one player first.");return;}
+    if(!Object.keys(buildSegments().current).length){alert("Enter at least one player's score before adding the round.");return;}
     pendingRestore=null;
-    state.rounds.push({id:uid(),scores:{}});save();renderSheet();refreshDynamic();
-    var rows=sheetEl.querySelectorAll("tbody tr");var last=rows[rows.length-1];if(last){var f=last.querySelector(".scoreinput");if(f)f.focus();}
+    state.rounds.push({id:uid(),marker:true});
+    save();renderAll();
   });
 
   finishBtn.addEventListener("click",openFinish);
@@ -1105,7 +1190,7 @@
   function ordinal(n){if(!n)return"—";var s=["th","st","nd","rd"],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}
   function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
 
-  buildThemeMenu();buildModeMenu();buildScoreModeMenu();applyTheme(currentTheme);applyScoreMode(state.scoreMode);renderAll();
+  buildThemeMenu();buildModeMenu();buildScoreModeMenu();applyTheme(currentTheme);applyScoreMode(state.scoreMode);
   if(!state.seenGuide)openGuide();
 })();
 </script>
