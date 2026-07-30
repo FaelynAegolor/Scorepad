@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="icon-512.png" width="96" height="96" alt="Scorepad logo — an amber tally-mark badge">
+  <img src="icon512.png" width="96" height="96" alt="Scorepad logo — an amber tally-mark badge">
 
   # Scorepad<span>.uk</span>
 
