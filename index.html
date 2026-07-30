@@ -338,6 +338,15 @@
   .bbtn:hover{border-color:var(--muted)}
   .bbtn.primary{grid-column:1/-1;background:var(--gold);color:var(--on-gold);border-color:var(--gold)}
 
+  .lifesetup-modal{max-width:340px}
+  .lifesetup-title{font-size:22px;margin-top:8px}
+  .lifesetup-lede{margin-bottom:18px}
+  .lifesetup-input{width:100%;text-align:center;font-family:var(--font-mono);font-weight:700;font-size:34px;background:color-mix(in srgb,var(--text) 8%,transparent);border:1.5px solid var(--line);border-radius:12px;color:var(--text);padding:14px;margin:0 0 18px;font-variant-numeric:tabular-nums;transition:.15s;-moz-appearance:textfield}
+  .lifesetup-input::-webkit-outer-spin-button,.lifesetup-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  .lifesetup-input:focus{outline:none;border-color:var(--gold)}
+  .lifesetup-actions{display:flex;gap:10px}
+  .lifesetup-actions .bbtn{flex:1}
+
   footer{text-align:center;color:var(--muted);opacity:.7;font-size:11px;margin-top:26px;line-height:1.6}
   .warn{color:var(--gold);opacity:1;display:none;margin-bottom:6px}
 
@@ -393,8 +402,8 @@
      the left of the screen. Pin it to the end explicitly instead. */
   body.game-mode header{margin-bottom:2px;justify-content:flex-end}
   body.game-mode .brand{display:none}
-  body.game-mode .gamename{font-size:16px;font-weight:700;margin:8px 0 4px;letter-spacing:-.2px}
-  body.game-mode .setup{margin:0 2px 10px;font-size:12px}
+  body.game-mode .gamename{text-align:center}
+  body.game-mode .setup{margin:0 2px 10px;font-size:12px;justify-content:center}
   body.game-mode .target{width:60px;padding:4px 8px;font-size:13px}
   body.game-mode .section-label{display:none}
   body.game-mode .addplayer{display:none}
@@ -533,12 +542,27 @@
     <p class="guide-lede">A free, offline scorekeeper for board and card games — it does the sums so you don't have to.</p>
     <ol class="guide-list">
       <li><span class="guide-num">1</span><div><b>Name your crew</b><p>Tap the placeholder names to swap in real ones. Tap a coloured dot to change a player's colour — everyone gets their own, so there's no more "wait, which line is mine?"</p></div></li>
-      <li><span class="guide-num">2</span><div><b>Rack up the points</b><p>Tap − or + beside a score to nudge, or tap the number itself for a proper keypad. The little pill that pops up above tracks your recent taps, so you can spot a fumble before it's set in stone.</p></div></li>
-      <li><span class="guide-num">3</span><div><b>Prefer a scoresheet?</b><p>Flick on Round-by-round mode from the menu (top right). Enter each player's score on their tile — the tile darkens once it's in — then tap "Add round" to lock the hand in. Flip 7 and Sushi Go! presets are in there too — one tap and the app knows the rules better than half the table.</p></div></li>
-      <li><span class="guide-num">4</span><div><b>Crown the winner</b><p>When the dust settles, tap Finish game for a winner banner, ranked standings, and a shareable image for the group chat. Bragging rights, saved forever.</p></div></li>
+      <li><span class="guide-num">2</span><div><b>Rack up the points</b><p>Tap − or + beside a score to nudge, or tap the number itself for a proper keypad. The little pill that pops up above tracks your recent taps, so you can spot a fumble before it's set in stone. Pick Star Realms or Yu-Gi-Oh from the menu and the keypad switches to a life total that counts down instead of up.</p></div></li>
+      <li><span class="guide-num">3</span><div><b>Prefer a scoresheet?</b><p>Flick on Round-by-round mode from the menu (top right). Enter each player's score on their tile — the tile darkens once it's in — then tap "Add round" to lock the hand in. Flip 7, Sushi Go! (maki and pudding ties split themselves) and more presets are in there too — one tap and the app knows the rules better than half the table.</p></div></li>
+      <li><span class="guide-num">4</span><div><b>Playing at the table?</b><p>Once everyone's in, tap the expand icon (top right) to flip into Game mode — bigger tiles, no setup clutter, built to read from across the table. Tap it again any time to switch back.</p></div></li>
+      <li><span class="guide-num">5</span><div><b>Crown the winner</b><p>When the dust settles, tap Finish game for a winner banner, ranked standings, and a shareable image for the group chat. In Star Realms or Yu-Gi-Oh, rankings follow who lasted longest, not who's left with the most life. Bragging rights, saved forever.</p></div></li>
     </ol>
     <div class="guide-foot">Everything lives on your device — no accounts, works offline, free forever. Cross our hearts.</div>
     <button class="guide-cta" id="guide-start">Deal me in</button>
+  </div>
+</div>
+
+<div class="overlay" id="lifesetup-overlay" hidden>
+  <div class="banner lifesetup-modal" role="dialog" aria-modal="true" aria-labelledby="lifesetup-title">
+    <button class="guide-x" id="lifesetup-x" aria-label="Cancel">×</button>
+    <div class="kp-eyebrow">Life total</div>
+    <h2 class="guide-title lifesetup-title" id="lifesetup-title">Set starting life</h2>
+    <p class="guide-lede lifesetup-lede" id="lifesetup-note">Every player starts here. Existing scores on the board will be cleared.</p>
+    <input class="lifesetup-input" id="lifesetup-input" type="number" inputmode="numeric" min="1" placeholder="e.g. 20" aria-label="Starting life total">
+    <div class="lifesetup-actions">
+      <button class="bbtn" id="lifesetup-cancel">Cancel</button>
+      <button class="bbtn primary" id="lifesetup-start">Start</button>
+    </div>
   </div>
 </div>
 
@@ -600,6 +624,7 @@
   };
   var MODES={
     standard:{label:"Standard",note:"Just the number pad, no target",target:"",keypad:"standard"},
+    life:{label:"Life total",note:"Set your own starting total — everyone begins there and counts down",target:"",keypad:"standard",countdown:true},
     flip7:{label:"Flip 7",name:"Flip 7",target:"200",note:"Play to 200, with the card picker",keypad:"flip7"},
     sushigo:{label:"Sushi Go!",name:"Sushi Go!",target:"",note:"Three rounds, with the card picker",keypad:"sushigo"},
     starrealms:{label:"Star Realms",name:"Star Realms",target:"50",note:"Starts at 50 Authority, counts down",keypad:"starrealms",countdown:true},
@@ -631,6 +656,11 @@
     if(typeof s.countdown!=="boolean")s.countdown=false;
     if(typeof s.gameNameCustom!=="boolean")s.gameNameCustom=false;
     if(typeof s.gameMode!=="boolean")s.gameMode=false;
+    // modeId tracks which menu entry is active, separately from keypadType -- multiple modes
+    // (Standard and Life total) can share the same generic keypad, so keypadType alone can't
+    // tell them apart. Old saves predate this field; every mode used to have keypadType===its
+    // own id, so that's a safe migration guess.
+    if(typeof s.modeId!=="string"||!MODES[s.modeId])s.modeId=MODES[s.keypadType]?s.keypadType:"standard";
     var used=s.players.map(function(p){return p.color;}).filter(Boolean);
     s.players.forEach(function(p){if(!p.color){var c=PALETTE.filter(function(x){return used.indexOf(x)<0;})[0]||PALETTE[used.length%PALETTE.length];p.color=c;used.push(c);}});
   }
@@ -741,13 +771,13 @@
       var m=MODES[id];
       var b=document.createElement("button");b.className="mode-opt";b.setAttribute("data-mode",id);
       b.innerHTML="<b>"+esc(m.label)+"</b><small>"+esc(m.note)+"</small>";
-      b.addEventListener("click",function(){selectMode(id);});
+      b.addEventListener("click",function(){if(id==="life")openLifeSetup();else selectMode(id);});
       l.appendChild(b);
     });
     syncModeMenu();
   }
   function syncModeMenu(){
-    document.querySelectorAll(".mode-opt").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-mode")===state.keypadType);});
+    document.querySelectorAll(".mode-opt").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-mode")===state.modeId);});
   }
   function selectMode(id){
     var m=MODES[id];if(!m)return;
@@ -758,6 +788,7 @@
     targetEl.value=state.targetScore;
     state.keypadType=m.keypad||"standard";
     state.countdown=!!m.countdown;
+    state.modeId=id;
     syncTargetLabel();
     save();syncModeMenu();refreshDynamic();closeMenu();
   }
@@ -768,6 +799,33 @@
     else{pre.textContent="Play to";post.innerHTML='points <span class="opt">(optional)</span>';}
   }
   function lifeOffset(){var t=parseInt(state.targetScore,10);return (state.countdown&&!isNaN(t))?t:0;}
+
+  // ---- Life total mode setup: asks for a starting life, then resets every player to it ----
+  var lifesetupOverlay=document.getElementById("lifesetup-overlay"),lifesetupInput=document.getElementById("lifesetup-input");
+  function openLifeSetup(){
+    closeMenu();
+    lifesetupInput.value=(state.modeId==="life"&&state.targetScore)?state.targetScore:"";
+    lifesetupOverlay.hidden=false;
+    lifesetupInput.focus();lifesetupInput.select();
+  }
+  function closeLifeSetup(){lifesetupOverlay.hidden=true;}
+  function applyLifeSetup(){
+    var val=parseInt(lifesetupInput.value,10);
+    if(isNaN(val)||val<1){alert("Enter a starting life total of at least 1.");lifesetupInput.focus();return;}
+    if(state.rounds.length&&!confirm("Reset every player to "+val+" life? This clears all current scores."))return;
+    state.rounds=[];
+    if(!state.gameNameCustom){state.gameName="";gameNameEl.value="";}
+    state.targetScore=String(val);targetEl.value=state.targetScore;
+    state.keypadType="standard";state.countdown=true;state.modeId="life";
+    syncTargetLabel();
+    save();syncModeMenu();renderAll();clearPendingRestore();
+    closeLifeSetup();
+  }
+  document.getElementById("lifesetup-x").addEventListener("click",closeLifeSetup);
+  document.getElementById("lifesetup-cancel").addEventListener("click",closeLifeSetup);
+  document.getElementById("lifesetup-start").addEventListener("click",applyLifeSetup);
+  lifesetupInput.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();applyLifeSetup();}});
+  lifesetupOverlay.addEventListener("click",function(e){if(e.target===lifesetupOverlay)closeLifeSetup();});
 
   function buildScoreModeMenu(){
     var l=document.getElementById("score-mode-list");l.innerHTML="";
@@ -934,6 +992,7 @@
     state.targetScore="";
     state.scoreMode="running";
     state.keypadType="standard";
+    state.modeId="standard";
     state.showRank=true;
     state.showTotal=true;
     state.showProgress=true;
