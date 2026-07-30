@@ -25,11 +25,16 @@
     --radius:16px;
   }
   *{box-sizing:border-box} html,body{margin:0}
+  /* rapid taps on adjacent tiles/buttons were being read as a double-tap and triggering the
+     browser's zoom gesture. manipulation drops just that double-tap-zoom heuristic while still
+     leaving real pinch-zoom (an accessibility feature) untouched, unlike user-scalable=no. */
+  html{touch-action:manipulation}
   body{
     font-family:var(--font-body);color:var(--text);
     background:radial-gradient(120% 90% at 50% -10%, var(--bg0) 0%, var(--bg1) 55%, var(--bg2) 100%);
     min-height:100dvh;-webkit-text-size-adjust:100%;
     padding:18px 14px calc(28px + env(safe-area-inset-bottom));transition:background .3s;
+    touch-action:manipulation;
   }
   .wrap{max-width:760px;margin:0 auto}
 
@@ -89,7 +94,11 @@
   .section-label{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin:0 2px 10px;display:flex;align-items:center;gap:8px}
   .section-label::after{content:"";flex:1;height:1px;background:var(--line)}
 
-  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+  /* align-items:start (grid's default is stretch) keeps each tile sized to its own card.
+     Without it, one taller card in a row (e.g. the "eliminated" pill adding height) stretches
+     every .tile in that row to match, so the progress ring -- which traces .tile's full box --
+     drifts below the shorter cards next to it instead of hugging their edges. */
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;align-items:start}
   /* registers --tile-progress as an animatable number (rather than an opaque string) so the
      transition below can tween it frame-by-frame -- conic-gradient() itself can't be
      transitioned, but recalculating it every frame from a smoothly-changing number reads
@@ -617,10 +626,51 @@
     });
     return{completed:completed,current:cur};
   }
+  // Chronological ledger index at which each player's life first hits the elimination
+  // threshold (raw total + lifeOffset() <= 0). Used to rank Life Mode games by survival
+  // order -- final remaining life doesn't matter, only how long you lasted.
+  function eliminationOrder(){
+    var off=lifeOffset(),running={},order={};
+    state.rounds.forEach(function(e,i){
+      if(e.marker)return;
+      Object.keys(e.scores).forEach(function(pid){
+        var v=e.scores[pid];
+        if(typeof v!=="number"||isNaN(v))return;
+        running[pid]=(running[pid]||0)+v;
+        if(order[pid]===undefined&&running[pid]+off<=0)order[pid]=i;
+      });
+    });
+    return order;
+  }
   function standings(){
-    var arr=state.players.map(function(pl){return{pl:pl,t:totalFor(pl.id)};});
-    arr.sort(function(a,b){return b.t-a.t;});
-    var rank=0,prev=null,seen=0;arr.forEach(function(o){seen++;if(o.t!==prev){rank=seen;prev=o.t;}o.rank=rank;});
+    var target=parseInt(state.targetScore,10),hasTarget=!isNaN(target)&&target>0;
+    var lifeMode=state.countdown&&hasTarget;
+    var elimOrder=lifeMode?eliminationOrder():null;
+    var arr=state.players.map(function(pl){
+      var o={pl:pl,t:totalFor(pl.id)};
+      if(lifeMode){o.eliminated=elimOrder[pl.id]!==undefined;o.elimIdx=o.eliminated?elimOrder[pl.id]:null;}
+      return o;
+    });
+    if(lifeMode){
+      // Still-standing players outrank anyone eliminated, ranked by life left among themselves.
+      // Eliminated players rank by survival order -- eliminated later beats eliminated earlier,
+      // regardless of who had more life left at the final whistle.
+      arr.sort(function(a,b){
+        if(a.eliminated!==b.eliminated)return a.eliminated?1:-1;
+        return a.eliminated?(b.elimIdx-a.elimIdx):(b.t-a.t);
+      });
+      var rank=0,prev=null,seen=0;
+      arr.forEach(function(o){
+        seen++;
+        var key=o.eliminated?"e"+o.elimIdx:"a"+o.t;
+        if(key!==prev){rank=seen;prev=key;}
+        o.rank=rank;
+      });
+    } else {
+      arr.sort(function(a,b){return b.t-a.t;});
+      var rank2=0,prev2=null,seen2=0;
+      arr.forEach(function(o){seen2++;if(o.t!==prev2){rank2=seen2;prev2=o.t;}o.rank=rank2;});
+    }
     return arr;
   }
 
