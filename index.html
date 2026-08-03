@@ -37,6 +37,30 @@
     padding:18px 14px calc(28px + env(safe-area-inset-bottom));transition:background .3s;
     touch-action:manipulation;
   }
+  /* Each theme gets its own backdrop treatment (not just recoloured vars) so they read as
+     distinct rooms rather than palette swaps of the same gradient shape. Felt & ivory keeps
+     the plain radial gradient above as its backdrop -- everything else layers something on top
+     of that same base shape. */
+  body[data-theme="arcade"]{
+    background:
+      radial-gradient(640px 480px at 10% -8%, color-mix(in srgb, var(--accent) 40%, transparent) 0%, transparent 60%),
+      radial-gradient(600px 480px at 94% 106%, color-mix(in srgb, var(--gold) 34%, transparent) 0%, transparent 58%),
+      repeating-linear-gradient(0deg, color-mix(in srgb, var(--gold) 7%, transparent) 0 1px, transparent 1px 46px),
+      repeating-linear-gradient(90deg, color-mix(in srgb, var(--gold) 7%, transparent) 0 1px, transparent 1px 46px),
+      radial-gradient(120% 90% at 50% -10%, var(--bg0) 0%, var(--bg1) 55%, var(--bg2) 100%);
+  }
+  body[data-theme="pop"]{
+    background:
+      radial-gradient(480px 420px at 6% 4%, color-mix(in srgb, var(--accent) 24%, transparent) 0%, transparent 65%),
+      radial-gradient(460px 400px at 98% 10%, color-mix(in srgb, #2ec5b6 30%, transparent) 0%, transparent 62%),
+      radial-gradient(560px 480px at 50% 112%, color-mix(in srgb, #ff6b81 22%, transparent) 0%, transparent 60%),
+      radial-gradient(120% 90% at 50% -10%, var(--bg0) 0%, var(--bg1) 55%, var(--bg2) 100%);
+  }
+  body[data-theme="paper"]{
+    background:
+      radial-gradient(color-mix(in srgb, var(--ink) 12%, transparent) 1px, transparent 1.4px) 0 0/16px 16px,
+      radial-gradient(120% 90% at 50% -10%, var(--bg0) 0%, var(--bg1) 55%, var(--bg2) 100%);
+  }
   .wrap{max-width:760px;margin:0 auto}
 
   header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
@@ -260,6 +284,9 @@
   .kp-name{font-family:var(--font-display);font-weight:900;font-size:24px;text-align:center;color:var(--text);margin:6px 0 2px;line-height:1.1}
   .kp-current{text-align:center;color:var(--muted);font-size:12px;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px}
   .kp-current span{font-family:var(--font-mono);color:var(--text);font-weight:700;margin-left:4px;font-variant-numeric:tabular-nums;text-transform:none;letter-spacing:0}
+  .kp-current-arrow{margin-left:4px;color:var(--muted)}
+  .kp-current-arrow[hidden]{display:none}
+  .kp-current-arrow span{color:var(--gold)}
   .kp-display{background:color-mix(in srgb,var(--text) 8%,transparent);border-radius:12px;padding:14px;text-align:center;font-family:var(--font-mono);font-weight:700;font-size:36px;color:var(--text);margin-bottom:12px;font-variant-numeric:tabular-nums;line-height:1}
   .kp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
   .kp-numeric[hidden]{display:none}
@@ -622,7 +649,7 @@
     <button class="guide-x" id="kp-close" aria-label="Close keypad">×</button>
     <div class="kp-eyebrow">Adjust score</div>
     <div class="kp-name" id="kp-name">—</div>
-    <div class="kp-current"><span id="kp-current-lab">current</span> <span id="kp-current">0</span></div>
+    <div class="kp-current"><span id="kp-current-lab">current</span> <span id="kp-current">0</span><span class="kp-current-arrow" id="kp-current-arrow" hidden>→ <span id="kp-current-new">0</span></span></div>
     <div class="kp-picker" id="kp-picker" hidden></div>
     <div class="kp-numeric" id="kp-numeric">
     <div class="kp-quickrow" id="kp-quickrow" hidden></div>
@@ -801,6 +828,7 @@
     var r=document.documentElement.style;
     Object.keys(VARMAP).forEach(function(k){r.setProperty(VARMAP[k],t.c[k]);});
     r.setProperty("--font-display",t.f.display);r.setProperty("--font-body",t.f.body);r.setProperty("--font-mono",t.f.mono);
+    document.body.setAttribute("data-theme",id);
     state.theme=id;save();syncThemeMenu();
   }
   function buildThemeMenu(){
@@ -1159,13 +1187,21 @@
     document.getElementById("kp-name").style.color=pl.color;
     if(state.scoreMode==="rounds"){
       document.getElementById("kp-current-lab").textContent="this round";
-      document.getElementById("kp-current").textContent=pendingScoreFor(playerId);
+      kpState.baseCurrent=pendingScoreFor(playerId);
     } else {
       document.getElementById("kp-current-lab").textContent="current";
-      document.getElementById("kp-current").textContent=totalFor(playerId)+lifeOffset();
+      kpState.baseCurrent=totalFor(playerId)+lifeOffset();
     }
+    document.getElementById("kp-current").textContent=kpState.baseCurrent;
+    updateKpProjection(0);
     buildPicker();
     updateKpDisplay();kpOverlay.hidden=false;
+  }
+  function updateKpProjection(delta){
+    var arrow=document.getElementById("kp-current-arrow");
+    if(!delta){arrow.hidden=true;return;}
+    document.getElementById("kp-current-new").textContent=kpState.baseCurrent+delta;
+    arrow.hidden=false;
   }
   var pickerState={flip7:null,sushigo:null};
   function resetPickerState(){
@@ -1274,6 +1310,7 @@
     document.getElementById("pk-note").innerHTML=notes.length?notes.join(" · "):"&nbsp;";
     var add=document.getElementById("pk-add");
     add.disabled=(Object.keys(s.numbers).length===0&&Object.keys(s.modifiers).length===0);
+    updateKpProjection(t);
   }
   function sushigoHTML(){
     var nigiri=[
@@ -1403,6 +1440,7 @@
     if(c.pudding&&c.puddingSplit>1)notes.push("pudding split "+c.puddingSplit+" ways: "+splitPoints(c.pudding,c.puddingSplit)+" pts");
     document.getElementById("pk-total").textContent=t;
     document.getElementById("pk-note").innerHTML=notes.length?notes.join(" · "):"&nbsp;";
+    updateKpProjection(t);
   }
   function closeKeypad(){kpOverlay.hidden=true;kpState.playerId=null;kpState.value="";}
   function updateKpDisplay(){document.getElementById("kp-display").textContent=kpState.value||"0";}
