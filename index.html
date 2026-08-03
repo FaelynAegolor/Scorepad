@@ -6,7 +6,7 @@
 <title>Scorepad.uk — board game scorekeeper</title>
 <meta name="description" content="A free, offline scorekeeper for board and card games.">
 <meta name="theme-color" content="#1a1226">
-  <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "955b2233432b4ce08e544fca69ad66dc"}'></script><!-- End Cloudflare Web Analytics -->
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "955b2233432b4ce08e544fca69ad66dc"}'></script><!-- End Cloudflare Web Analytics -->
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -182,6 +182,9 @@
   .sheet-scroll{background:var(--paper);border-radius:var(--radius);overflow:auto;box-shadow:0 18px 40px -18px rgba(0,0,0,.6);border:1px solid var(--paper-line);-webkit-overflow-scrolling:touch}
   table{border-collapse:collapse;width:100%;min-width:100%}
   thead th{position:sticky;top:0;background:var(--paper);z-index:2;color:var(--ink);font-weight:700;font-size:13px;text-align:center;padding:12px 8px;border-bottom:2px solid var(--paper-line);max-width:120px}
+  /* a real floor on each player column so minus/number/plus always get comfortable room instead
+     of being squeezed to fit the viewport -- .sheet-scroll scrolls horizontally past this. */
+  thead th:not(.rndhead){min-width:132px}
   thead th .hname{display:inline-flex;align-items:center;gap:6px;justify-content:center;max-width:104px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .hdot{width:9px;height:9px;border-radius:50%;flex:none}
   thead th.rndhead{left:0;z-index:3;text-align:left;padding-left:14px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-soft)}
@@ -200,7 +203,20 @@
   td.topscore .scoreinput{font-weight:700}
   td.topscore::after{content:"";position:absolute;left:50%;bottom:6px;transform:translateX(-50%);width:18px;height:3px;border-radius:2px;background:var(--gold)}
   tfoot .totalrow td{padding:14px 6px;border-top:2px solid var(--paper-line);border-bottom:none;background:transparent;font-family:var(--font-mono);font-weight:700;font-size:17px;color:var(--ink);text-align:center;font-variant-numeric:tabular-nums}
-  tfoot .totalcell-lab{position:sticky;left:0;background:var(--paper);font-family:var(--font-body);font-weight:700;font-size:12px;color:var(--ink-soft);text-align:right;padding:14px 10px 14px 6px}
+  /* tfoot .totalrow td (2 elements + 1 class) actually out-specifies a plain tfoot .totalcell-lab
+     (1 element + 1 class), so the "background:transparent" above was silently winning over this
+     rule's intended opaque paper background -- the sticky "Total:" label had no real backing, so
+     whatever scrolled underneath it showed straight through. Matching td.totalcell-lab here beats
+     it properly. */
+  tfoot .totalrow td.totalcell-lab{position:sticky;left:0;background:var(--paper);font-family:var(--font-body);font-weight:700;font-size:12px;color:var(--ink-soft);text-align:right;padding:14px 10px 14px 6px}
+
+  /* the not-yet-committed round: same row shape as a completed one, tinted with --accent and
+     tagged "now" so it visually reads as "still open" rather than locked-in history. Matching
+     the nth-child rule's specificity (and coming after it in source order) is what lets this
+     override the even/odd alternating background regardless of where this row lands. */
+  tbody tr.rnd-current-row td{background:color-mix(in srgb,var(--accent) 7%,var(--paper))}
+  tbody tr.rnd-current-row .rndcell{background:color-mix(in srgb,var(--accent) 7%,var(--paper));color:var(--accent)}
+  .rnd-current-tag{font-size:9px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);opacity:.9}
 
   .addround{width:100%;margin-top:12px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font:inherit;font-weight:700;font-size:15px;padding:15px;cursor:pointer;transition:.15s;letter-spacing:.2px;box-shadow:0 10px 24px -12px rgba(0,0,0,.55)}
   .addround:hover{background:var(--accent-press)}
@@ -221,7 +237,7 @@
   .adjbtn.small{width:24px;height:24px;border-radius:7px;font-size:14px;flex:none}
   .adjbtn.flash-plus{border-color:#22c55e;color:#22c55e;background:color-mix(in srgb,#22c55e 16%,transparent)}
   .adjbtn.flash-minus{border-color:#ef4444;color:#ef4444;background:color-mix(in srgb,#ef4444 16%,transparent)}
-  .cell-adj{display:flex;align-items:center;justify-content:center;gap:4px;padding:8px 4px}
+  .cell-adj{display:flex;align-items:center;justify-content:center;gap:4px;padding:8px 4px;min-width:132px}
   .cell-adj .scoreinput{padding:0;width:100%;min-width:0}
   /* the round table sits on the light "paper" surface, not the dark panel .adjbtn was
      designed for -- var(--text) is a light colour there and was rendering invisible */
@@ -409,23 +425,48 @@
   body.game-mode .section-label{display:none}
   body.game-mode .addplayer{display:none}
   body.game-mode footer{display:none}
-  /* Large minmax deliberately forces down to one tile per row on phones and two on tablets --
-     fewer, bigger tiles reads better across a table than a dense grid of small ones. The score
-     is the reason this mode exists, so it gets the most aggressive size jump of anything here;
-     name/badge/buttons grow too, but stay clearly secondary to it. */
-  body.game-mode .cards{grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
-  body.game-mode .card{padding:22px 20px 18px}
-  body.game-mode .score-block{margin-top:22px}
-  body.game-mode .tnum{font-size:96px;padding:0 10px}
-  body.game-mode .score-block small{font-size:13px;margin-top:14px}
-  @media (max-width:480px){body.game-mode .cards{grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}body.game-mode .tnum{font-size:76px}}
-  @media (max-width:340px){body.game-mode .tnum{font-size:64px}}
-  body.game-mode .adjbtn{width:52px;height:52px;font-size:26px}
-  body.game-mode .pdot{width:32px;height:32px}
-  body.game-mode .pname{font-size:21px}
-  body.game-mode .nameline{margin-bottom:10px}
-  body.game-mode .rank-badge{width:28px;height:28px;font-size:16px}
+  /* auto-fill + a modest minmax floor packs in as many tiles per row as actually fit -- two-up
+     on a normal phone, more as the screen widens -- rather than an arbitrary fixed count. .wrap's
+     usual 760px cap is lifted here so wide screens genuinely get "lots in a row" instead of
+     stalling out at whatever fits in a narrow centred column. Each tier below raises both the
+     minimum tile width and the font size together so the score stays the biggest thing in view
+     without a wider tile ever being asked to hold text sized for a narrower one. */
+  body.game-mode .wrap{max-width:1600px}
+  body.game-mode .cards{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  body.game-mode .card{padding:16px 14px 12px}
+  body.game-mode .score-block{margin-top:14px}
+  body.game-mode .tnum{font-size:50px;padding:0 6px}
+  body.game-mode .score-block small{font-size:11px;margin-top:10px}
+  body.game-mode .adjbtn{width:40px;height:40px;font-size:20px}
+  body.game-mode .pdot{width:26px;height:26px}
+  body.game-mode .pname{font-size:17px}
+  body.game-mode .nameline{margin-bottom:8px}
+  body.game-mode .rank-badge{width:24px;height:24px;font-size:14px}
   body.game-mode .mini-total{font-size:11px}
+  /* +/- buttons flanking a tile-dominating number don't reliably fit at any of these tile
+     widths once you account for a 4-digit life total (e.g. Yu-Gi-Oh's "8000") -- the row keeps
+     outgrowing the card and the buttons get clipped by its overflow:hidden. Stack the number on
+     its own row instead, buttons in a row underneath, at every tier rather than chasing
+     per-breakpoint math that a longer number would just break again. */
+  body.game-mode .score-row{display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"num num" "minus plus";justify-items:center;row-gap:10px}
+  body.game-mode .score-row .tnum{grid-area:num}
+  body.game-mode .score-row .adjbtn.minus{grid-area:minus}
+  body.game-mode .score-row .adjbtn.plus{grid-area:plus}
+  @media (min-width:600px){
+    body.game-mode .cards{grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
+    body.game-mode .card{padding:20px 16px 16px}
+    body.game-mode .score-block{margin-top:20px}
+    body.game-mode .tnum{font-size:60px}
+    body.game-mode .score-block small{font-size:13px;margin-top:14px}
+    body.game-mode .adjbtn{width:48px;height:48px;font-size:24px}
+    body.game-mode .pdot{width:30px;height:30px}
+    body.game-mode .pname{font-size:20px}
+    body.game-mode .rank-badge{width:28px;height:28px;font-size:16px}
+  }
+  @media (min-width:1000px){
+    body.game-mode .cards{grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px}
+    body.game-mode .tnum{font-size:72px}
+  }
   #gamemodebtn[aria-pressed="true"]{border-color:var(--gold);color:var(--gold)}
 </style>
 </head>
@@ -1476,6 +1517,27 @@
       }
     }
   }
+  // Same idea as setSegmentValue but for the open-ended tail after the last marker (or the
+  // whole ledger if no round has been committed yet) -- there's no marker to splice before, so
+  // this clears any existing entries for pid in that tail and appends one fresh entry.
+  function setCurrentValue(pid,raw){
+    var startIdx=0;
+    for(var i=state.rounds.length-1;i>=0;i--){if(state.rounds[i].marker){startIdx=i+1;break;}}
+    for(var j=state.rounds.length-1;j>=startIdx;j--){
+      var e=state.rounds[j];
+      if(!e.marker&&Object.prototype.hasOwnProperty.call(e.scores,pid)){
+        delete e.scores[pid];
+        if(!Object.keys(e.scores).length)state.rounds.splice(j,1);
+      }
+    }
+    if(raw!==""&&raw!=="-"){
+      var val=parseInt(raw,10);
+      if(!isNaN(val)){
+        var entry={id:uid(),scores:{}};entry.scores[pid]=val;
+        state.rounds.push(entry);
+      }
+    }
+  }
   function deleteRound(markerId){
     var markerIdx=state.rounds.findIndex(function(e){return e.id===markerId;});
     if(markerIdx<0)return;
@@ -1487,8 +1549,7 @@
 
   function renderSheet(){
     if(!state.players.length){sheetEl.innerHTML='<div class="empty">Add a player above to start keeping score.</div>';return;}
-    var completed=buildSegments().completed;
-    if(!completed.length){sheetEl.innerHTML='<div class="empty"><b>No rounds yet.</b><br>Enter each player’s score on their tile above, then tap “Add round”.</div>';return;}
+    var segs=buildSegments(),completed=segs.completed,current=segs.current;
     var html='<div class="sheet-scroll"><table><thead><tr><th class="rndhead">Round</th>';
     state.players.forEach(function(pl){html+='<th data-head="'+pl.id+'"><span class="hname"><span class="hdot" style="background:'+pl.color+'"></span><span class="htext">'+esc(pl.name||"—")+'</span></span></th>';});
     html+='</tr></thead><tbody>';
@@ -1502,9 +1563,20 @@
       '</div></td>';});
       html+='</tr>';
     }
+    // The round in progress -- same shape as a committed round, tinted and tagged "now" instead
+    // of a delete button, since there's no marker yet to delete. Edits here (or on the tiles --
+    // they write to the same ledger tail) show up in real time via updateCurrentRow/refreshDynamic.
+    html+='<tr class="rnd-current-row"><td class="rndcell"><span class="rlab">R'+(completed.length+1)+'<span class="rnd-current-tag">now</span></span></td>';
+    state.players.forEach(function(pl){var v=current[pl.id];var val=(typeof v==="number"&&!isNaN(v))?v:"";html+='<td data-cell="current|'+pl.id+'"><div class="cell-adj">'+
+      '<button class="adjbtn small minus" data-r="current" data-p="'+pl.id+'" aria-label="Subtract 1">−</button>'+
+      '<input class="scoreinput" inputmode="numeric" type="number" step="1" data-r="current" data-p="'+pl.id+'" value="'+val+'" placeholder="0" aria-label="Score">'+
+      '<button class="adjbtn small plus" data-r="current" data-p="'+pl.id+'" aria-label="Add 1">+</button>'+
+    '</div></td>';});
+    html+='</tr>';
     html+='</tbody><tfoot><tr class="totalrow"><td class="rndcell totalcell-lab">Total:</td>';
     var roundTotals=state.players.map(function(pl){
       var t=0;completed.forEach(function(seg){var v=seg.scores[pl.id];if(typeof v==="number"&&!isNaN(v))t+=v;});
+      var cv=current[pl.id];if(typeof cv==="number"&&!isNaN(cv))t+=cv;
       return t;
     });
     var maxTotal=roundTotals.length?Math.max.apply(null,roundTotals):null;
@@ -1518,7 +1590,8 @@
     sheetEl.querySelectorAll(".scoreinput").forEach(function(inp){
       inp.addEventListener("input",function(){
         var markerId=inp.getAttribute("data-r"),pid=inp.getAttribute("data-p");
-        setSegmentValue(markerId,pid,inp.value.trim());
+        if(markerId==="current")setCurrentValue(pid,inp.value.trim());
+        else setSegmentValue(markerId,pid,inp.value.trim());
         save();refreshDynamic();
       });
       inp.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();var all=Array.prototype.slice.call(sheetEl.querySelectorAll(".scoreinput"));var i=all.indexOf(inp);if(i>-1&&i+1<all.length)all[i+1].focus();else inp.blur();}});
@@ -1528,6 +1601,7 @@
         var isPlus=btn.classList.contains("plus");
         flashAdjBtn(btn,isPlus);
         var markerId=btn.getAttribute("data-r"),pid=btn.getAttribute("data-p");
+        if(markerId==="current"){addAdjustment(pid,isPlus?1:-1);return;}
         var input=btn.parentElement.querySelector(".scoreinput");
         var cur=parseInt(input.value,10);if(isNaN(cur))cur=0;
         var next=cur+(isPlus?1:-1);
@@ -1549,11 +1623,27 @@
       var max=present.length?Math.max.apply(null,present):null;
       state.players.forEach(function(pl){var cell=sheetEl.querySelector('td[data-cell="'+seg.markerId+'|'+pl.id+'"]');if(!cell)return;var v=seg.scores[pl.id];cell.classList.toggle("topscore",max!==null&&typeof v==="number"&&v===max);});
     });
+    var cur=segs.current;
+    var curPresent=[];state.players.forEach(function(pl){var v=cur[pl.id];if(typeof v==="number"&&!isNaN(v))curPresent.push(v);});
+    var curMax=curPresent.length?Math.max.apply(null,curPresent):null;
+    state.players.forEach(function(pl){var cell=sheetEl.querySelector('td[data-cell="current|'+pl.id+'"]');if(!cell)return;var v=cur[pl.id];cell.classList.toggle("topscore",curMax!==null&&typeof v==="number"&&v===curMax);});
+  }
+  // Patches the open round's row in place rather than re-rendering the table, so a tile tap or
+  // keypad edit elsewhere doesn't yank focus away from an input the user might be mid-edit on.
+  function updateCurrentRow(segs){
+    var row=sheetEl.querySelector(".rnd-current-row");if(!row)return;
+    state.players.forEach(function(pl){
+      var v=segs.current[pl.id];
+      var val=(typeof v==="number"&&!isNaN(v))?v:"";
+      var input=row.querySelector('.scoreinput[data-p="'+pl.id+'"]');
+      if(input&&document.activeElement!==input)input.value=val;
+    });
   }
   function updateSheetTotals(segs){
     var totalRow=sheetEl.querySelector(".totalrow");if(!totalRow)return;
     var roundTotals=state.players.map(function(pl){
       var t=0;segs.completed.forEach(function(seg){var v=seg.scores[pl.id];if(typeof v==="number"&&!isNaN(v))t+=v;});
+      var cv=segs.current[pl.id];if(typeof cv==="number"&&!isNaN(cv))t+=cv;
       return t;
     });
     var maxTotal=roundTotals.length?Math.max.apply(null,roundTotals):null;
@@ -1602,7 +1692,7 @@
         tile.style.setProperty("--tile-progress",pct);
       }
     });
-    finishBtn.classList.toggle("ready",anyReached);markTopScorers(segs);updateSheetTotals(segs);updateUndoBtn();
+    finishBtn.classList.toggle("ready",anyReached);markTopScorers(segs);updateSheetTotals(segs);updateCurrentRow(segs);updateUndoBtn();
   }
   function renderAll(){renderCards();renderSheet();refreshDynamic();}
 
