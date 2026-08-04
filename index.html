@@ -1718,6 +1718,11 @@
 
   // ---- cards ----
   function renderCards(){
+    // A remote sync update landing mid-keystroke would otherwise tear down and rebuild every
+    // card -- including the one the user is typing a name into -- which on mobile dismisses
+    // the on-screen keyboard after every letter. Skip the rebuild entirely while a name field
+    // has focus; the next render once it's blurred picks up anything that changed meanwhile.
+    if(document.activeElement&&document.activeElement.classList&&document.activeElement.classList.contains("pname")&&cardsEl.contains(document.activeElement))return;
     cardsEl.innerHTML="";
     state.players.forEach(function(pl){
       var tile=document.createElement("div");tile.className="tile";tile.setAttribute("data-pid",pl.id);tile.style.setProperty("--pc",pl.color);
@@ -2198,9 +2203,29 @@
   // doesn't reliably preserve the array order of non-numeric keys.
   var CLOUD_META_FIELDS=["gameName","targetScore","scoreMode","keypadType","modeId","countdown"];
   var FB=null;
-  var cloud={code:null,connected:false,seeding:false,applyingRemote:false,keyMap:{},valueCache:{},playerCache:{},lastMeta:null,unsub:null,unsubConn:null};
+  var cloud={code:null,connected:false,seeding:false,applyingRemote:false,keyMap:{},valueCache:{},playerCache:{},lastMeta:null,unsub:null,unsubConn:null,pendingWrites:0,pendingVal:undefined};
 
   function cloudGameRef(code){return FB.child(FB.ref(FB.db),"games/"+code);}
+  // A cloudMirror() call can touch several children (meta + N players + M rounds) with
+  // separate FB.set/push calls. Firebase echoes each one back through onValue as soon as its
+  // own local write lands -- often well before the others finish -- so the listener would
+  // otherwise see a string of partial snapshots (e.g. meta with no players yet) and blindly
+  // apply them as if they were authoritative remote state, wiping out players/rounds we just
+  // wrote a moment ago. Tracking outstanding writes lets the onValue handler hold off applying
+  // anything until our own mirror-out has fully landed, then apply whatever the latest snapshot
+  // turned out to be (which may include a genuine concurrent edit from another device).
+  function trackWrite(thenable){
+    cloud.pendingWrites++;
+    var settle=function(){
+      cloud.pendingWrites--;
+      if(cloud.pendingWrites<=0&&cloud.pendingVal!==undefined){
+        var v=cloud.pendingVal;cloud.pendingVal=undefined;
+        applyCloudSnapshot(v);
+      }
+    };
+    if(thenable&&typeof thenable.then==="function")thenable.then(settle,settle);
+    else settle();
+  }
   function cloudMirror(){
     if(!FB||!cloud.code||cloud.applyingRemote)return;
     cloudMirrorMeta();
@@ -2214,7 +2239,7 @@
   }
   function cloudMirrorMeta(){
     var meta=cloudMetaSnapshot(),metaJson=JSON.stringify(meta);
-    if(cloud.lastMeta!==metaJson){cloud.lastMeta=metaJson;FB.set(FB.child(cloudGameRef(cloud.code),"meta"),meta);}
+    if(cloud.lastMeta!==metaJson){cloud.lastMeta=metaJson;trackWrite(FB.set(FB.child(cloudGameRef(cloud.code),"meta"),meta));}
   }
   function cloudMirrorPlayers(){
     var playersRef=FB.child(cloudGameRef(cloud.code),"players");
@@ -2225,12 +2250,12 @@
       var json=JSON.stringify(value);
       if(cloud.playerCache[p.id]===json)return;
       cloud.playerCache[p.id]=json;
-      FB.set(FB.child(playersRef,p.id),value);
+      trackWrite(FB.set(FB.child(playersRef,p.id),value));
     });
     Object.keys(cloud.playerCache).forEach(function(id){
       if(seen[id])return;
       delete cloud.playerCache[id];
-      FB.remove(FB.child(playersRef,id));
+      trackWrite(FB.remove(FB.child(playersRef,id)));
     });
   }
   function cloudMirrorRounds(){
@@ -2238,17 +2263,17 @@
     var seen={};
     state.rounds.forEach(function(entry){
       seen[entry.id]=true;
-      var value=entry.marker?{marker:true}:{scores:entry.scores};
+      var value=entry.marker?(entry.category?{marker:true,category:entry.category}:{marker:true}):{scores:entry.scores};
       var json=JSON.stringify(value);
       if(cloud.valueCache[entry.id]===json)return;
       cloud.valueCache[entry.id]=json;
       var key=cloud.keyMap[entry.id];
-      if(key){FB.set(FB.child(roundsRef,key),value);}
-      else{var newRef=FB.push(roundsRef,value);cloud.keyMap[entry.id]=newRef.key;}
+      if(key){trackWrite(FB.set(FB.child(roundsRef,key),value));}
+      else{var newRef=FB.push(roundsRef,value);cloud.keyMap[entry.id]=newRef.key;trackWrite(newRef);}
     });
     Object.keys(cloud.keyMap).forEach(function(localId){
       if(seen[localId])return;
-      FB.remove(FB.child(roundsRef,cloud.keyMap[localId]));
+      trackWrite(FB.remove(FB.child(roundsRef,cloud.keyMap[localId])));
       delete cloud.keyMap[localId];
       delete cloud.valueCache[localId];
     });
@@ -2272,10 +2297,10 @@
     var newKeyMap={},newValueCache={};
     state.rounds=keys.map(function(key){
       var v=roundsVal[key]||{};
-      var value=v.marker?{marker:true}:{scores:v.scores||{}};
+      var value=v.marker?(v.category?{marker:true,category:v.category}:{marker:true}):{scores:v.scores||{}};
       newKeyMap[key]=key;
       newValueCache[key]=JSON.stringify(value);
-      return v.marker?{id:key,marker:true}:{id:key,scores:v.scores||{}};
+      return v.marker?(v.category?{id:key,marker:true,category:v.category}:{id:key,marker:true}):{id:key,scores:v.scores||{}};
     });
     cloud.keyMap=newKeyMap;
     cloud.valueCache=newValueCache;
@@ -2307,6 +2332,7 @@
         else{cloudMirror();}
         return;
       }
+      if(cloud.pendingWrites>0){cloud.pendingVal=val;return;}
       applyCloudSnapshot(val);
     },function(err){console.error("Scorepad cloud sync error",err);});
     if(!cloud.unsubConn){
