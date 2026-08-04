@@ -7,6 +7,29 @@
 <meta name="description" content="A free, offline scorekeeper for board and card games.">
 <meta name="theme-color" content="#1a1226">
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "955b2233432b4ce08e544fca69ad66dc"}'></script><!-- End Cloudflare Web Analytics -->
+<script type="module">
+  // Bridges the Firebase modular SDK (ES module, CDN-hosted, no build step) into
+  // window.__firebase so the classic <script> at the bottom of the page -- which does the
+  // actual app logic -- can use it without itself being a module. If the import fails (offline,
+  // blocked network, ad blocker), this whole module silently never runs any of its body,
+  // including the fallback below -- window.__firebase just stays undefined forever, which the
+  // app already treats as "sync unavailable" wherever it checks for it.
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
+  import { getDatabase, ref, child, onValue, set, push, remove } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-database.js";
+  var firebaseConfig = {
+    apiKey: "AIzaSyBRk6By816t1wVJLFztXwxPMmvbUOM-yrI",
+    authDomain: "scorepad-f6052.firebaseapp.com",
+    databaseURL: "https://scorepad-f6052-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "scorepad-f6052",
+    storageBucket: "scorepad-f6052.firebasestorage.app",
+    messagingSenderId: "541847163716",
+    appId: "1:541847163716:web:314c67aec6a609540d3d11"
+  };
+  var app = initializeApp(firebaseConfig);
+  var db = getDatabase(app);
+  window.__firebase = { db: db, ref: ref, child: child, onValue: onValue, set: set, push: push, remove: remove };
+  window.dispatchEvent(new CustomEvent("firebase-ready"));
+</script>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -61,6 +84,23 @@
       radial-gradient(color-mix(in srgb, var(--ink) 12%, transparent) 1px, transparent 1.4px) 0 0/16px 16px,
       radial-gradient(120% 90% at 50% -10%, var(--bg0) 0%, var(--bg1) 55%, var(--bg2) 100%);
   }
+  body[data-theme="barry"]{
+    background:
+      radial-gradient(700px 520px at 50% -10%, color-mix(in srgb, var(--gold) 22%, transparent) 0%, transparent 62%),
+      repeating-linear-gradient(45deg, color-mix(in srgb, var(--text) 4%, transparent) 0 2px, transparent 2px 9px),
+      radial-gradient(120% 90% at 50% -10%, var(--bg0) 0%, var(--bg1) 55%, var(--bg2) 100%);
+  }
+  /* True hexagon tessellation (plain CSS gradients can only make stripes/diamonds, not hexagons)
+     -- an inline SVG tile of 3 hex outlines sized to the exact repeat period of a pointy-top hex
+     grid (tile width = hex "flat-to-flat" span, tile height = 2 row-heights), so plain
+     background-repeat tiling completes the grid seamlessly at the tile edges. Colour is baked
+     into the SVG (data URIs can't read CSS custom properties), matching this theme's accent. */
+  body[data-theme="bees"]{
+    background:
+      radial-gradient(650px 500px at 85% -8%, color-mix(in srgb, var(--accent) 30%, transparent) 0%, transparent 60%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24.25' height='42' viewBox='0 0 24.25 42'%3E%3Cg fill='none' stroke='%23ffc107' stroke-opacity='0.07' stroke-width='1'%3E%3Cpolygon points='12.12,-14 24.25,-7 24.25,7 12.12,14 0,7 0,-7'/%3E%3Cpolygon points='0,7 12.12,14 12.12,28 0,35 -12.12,28 -12.12,14'/%3E%3Cpolygon points='24.25,7 36.37,14 36.37,28 24.25,35 12.12,28 12.12,14'/%3E%3C/g%3E%3C/svg%3E") 0 0/24.25px 42px,
+      radial-gradient(120% 90% at 50% -10%, var(--bg0) 0%, var(--bg1) 55%, var(--bg2) 100%);
+  }
   .wrap{max-width:760px;margin:0 auto}
 
   header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
@@ -79,6 +119,14 @@
   .menu[hidden]{display:none}
   .menu-h{font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin:2px 2px 10px}
   .menu-sec+.menu-sec{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+  .menu-panel[hidden]{display:none}
+  .menu-cat{width:100%;display:flex;align-items:center;gap:8px;text-align:left;background:transparent;border:1px solid var(--line);border-radius:12px;color:var(--text);font:inherit;font-weight:600;font-size:14px;padding:13px 14px;cursor:pointer;transition:.15s;margin-bottom:8px}
+  .menu-cat:last-child{margin-bottom:0}
+  .menu-cat:hover{border-color:var(--accent);color:var(--accent)}
+  .menu-cat-chevron{margin-left:auto;color:var(--muted);font-size:16px;line-height:1;flex:none}
+  .menu-cat-status{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;flex:none}
+  .menu-back{display:flex;align-items:center;gap:4px;background:transparent;border:none;color:var(--muted);font:inherit;font-weight:700;font-size:13px;cursor:pointer;padding:2px 2px 12px;margin-top:-4px}
+  .menu-back:hover{color:var(--accent)}
   .theme-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .theme-opt{display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:12px;background:transparent;border:1.5px solid var(--line);cursor:pointer;text-align:left;transition:.15s}
   .theme-opt:hover{border-color:var(--muted)}
@@ -97,7 +145,7 @@
   .score-toggle-label b{display:block;font:inherit;font-weight:600;font-size:14px;color:var(--text)}
   .score-toggle-label small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
   .ios-toggle{width:44px;height:26px;background:var(--line);border:none;border-radius:999px;padding:2px;cursor:pointer;position:relative;transition:background .2s;flex:none}
-  .ios-toggle[aria-pressed="true"]{background:var(--accent)}
+  .ios-toggle[aria-pressed="true"]{background:#22c55e}
   .ios-toggle-dot{display:block;width:22px;height:22px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
   .ios-toggle[aria-pressed="true"] .ios-toggle-dot{transform:translateX(18px)}
   .menu-new{width:100%;display:block;text-align:center;text-decoration:none;background:transparent;border:1px solid var(--line);border-radius:12px;color:var(--text);font:inherit;font-weight:600;font-size:14px;padding:12px;cursor:pointer;transition:.15s;box-sizing:border-box}
@@ -391,6 +439,20 @@
   .lifesetup-actions{display:flex;gap:10px}
   .lifesetup-actions .bbtn{flex:1}
 
+  /* shared game (cloud sync) */
+  .share-status-dot{width:9px;height:9px;border-radius:50%;background:var(--muted);flex:none;transition:background .2s}
+  .share-status-dot.live{background:#22c55e;box-shadow:0 0 0 3px color-mix(in srgb,#22c55e 25%,transparent)}
+  .share-status-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);font-weight:600}
+  .share-when-off .menu-new+.menu-new{margin-top:8px}
+  .share-when-on[hidden],.share-when-off[hidden]{display:none}
+  .share-banner{display:flex;align-items:center;gap:10px;margin:0 2px 18px;padding:10px 12px;background:color-mix(in srgb,var(--accent) 10%,var(--panel));border:1px solid color-mix(in srgb,var(--accent) 35%,var(--line));border-radius:12px}
+  .share-banner[hidden]{display:none}
+  .share-banner-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+  .share-banner-lab{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+  .share-code-text{font-family:var(--font-mono);font-weight:700;font-size:18px;letter-spacing:3px;color:var(--text)}
+  .share-copy-btn{flex:none;background:transparent;border:1px solid var(--line);color:var(--text);border-radius:9px;font:inherit;font-weight:700;font-size:12px;padding:8px 12px;cursor:pointer;transition:.15s}
+  .share-copy-btn:hover{border-color:var(--accent);color:var(--accent)}
+
   footer{text-align:center;color:var(--muted);opacity:.7;font-size:11px;margin-top:26px;line-height:1.6}
   .warn{color:var(--gold);opacity:1;display:none;margin-bottom:6px}
 
@@ -516,50 +578,79 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h11M4 12h16M9 18h11"/><circle cx="18" cy="6" r="2" fill="currentColor" stroke="none"/><circle cx="5" cy="12" r="2" fill="currentColor" stroke="none"/><circle cx="15" cy="18" r="2" fill="currentColor" stroke="none"/></svg>
         </button>
         <div class="menu" id="menu" hidden>
-        <div class="menu-sec">
-          <div class="menu-h">Scoring style</div>
-          <div id="score-mode-list"></div>
-          <div class="score-toggle-row">
-            <div class="score-toggle-label"><b>Show rank badge</b><small>1st/2nd/3rd medal on each tile</small></div>
-            <button class="ios-toggle" id="rank-toggle" aria-pressed="true" aria-label="Toggle rank badge display"><span class="ios-toggle-dot"></span></button>
+        <div class="menu-panel" id="menu-panel-root">
+          <div class="menu-sec">
+            <button class="menu-cat" data-panel="scoring">Scoring style<span class="menu-cat-chevron">›</span></button>
+            <button class="menu-cat" data-panel="game">Game<span class="menu-cat-chevron">›</span></button>
+            <button class="menu-cat" data-panel="share">Play together<span class="menu-cat-status share-when-on" hidden><span class="share-status-dot" aria-hidden="true"></span><span class="share-status-text"></span></span><span class="menu-cat-chevron">›</span></button>
+            <button class="menu-cat" data-panel="theme">Theme<span class="menu-cat-chevron">›</span></button>
           </div>
-          <div class="score-toggle-row">
-            <div class="score-toggle-label"><b>Show running total</b><small>Small total shown above each tile</small></div>
-            <button class="ios-toggle" id="total-toggle" aria-pressed="true" aria-label="Toggle running total display"><span class="ios-toggle-dot"></span></button>
+          <div class="menu-sec">
+            <button class="menu-new" id="menu-guide">Show guide</button>
+            <button class="menu-new" id="menu-new">Start new game</button>
+            <button class="menu-new" id="menu-install" hidden>Install app</button>
           </div>
-          <div class="score-toggle-row">
-            <div class="score-toggle-label"><b>Show target progress</b><small>Outline fills in as a player nears the target score</small></div>
-            <button class="ios-toggle" id="progress-toggle" aria-pressed="true" aria-label="Toggle target progress ring"><span class="ios-toggle-dot"></span></button>
+          <div class="menu-sec">
+            <div class="menu-h">Support</div>
+            <a class="support-btn" href="https://ko-fi.com/faelynaegolor" target="_blank" rel="noopener noreferrer">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 8h1a4 4 0 0 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z"/><line x1="6" y1="2" x2="6" y2="5"/><line x1="10" y1="2" x2="10" y2="5"/><line x1="14" y1="2" x2="14" y2="5"/></svg>
+              Buy me a coffee
+            </a>
           </div>
-          <div class="score-toggle-row">
-            <div class="score-toggle-label"><b>Show +/− buttons</b><small>Adjust buttons on tiles and in the round table</small></div>
-            <button class="ios-toggle" id="adjbtns-toggle" aria-pressed="true" aria-label="Toggle plus and minus buttons"><span class="ios-toggle-dot"></span></button>
+          <div class="menu-sec">
+            <button class="menu-new menu-reset" id="menu-reset">Reset everything</button>
           </div>
         </div>
-        <div class="menu-sec">
-          <div class="menu-h">Game</div>
-          <div id="mode-list"></div>
-          <p class="menu-note">More games coming — got one you'd like to see?</p>
-          <a class="menu-new" href="mailto:hello@scorepad.uk?subject=Game%20suggestion&body=Hi!%20I%27d%20love%20to%20see%20___%20added%20to%20Scorepad.%0A%0A">Suggest a game</a>
+        <div class="menu-panel" id="menu-panel-scoring" hidden>
+          <button class="menu-back" data-back>‹ Scoring style</button>
+          <div class="menu-sec" style="margin-top:0;padding-top:0;border-top:none">
+            <div id="score-mode-list"></div>
+            <div class="score-toggle-row">
+              <div class="score-toggle-label"><b>Show rank badge</b><small>1st/2nd/3rd medal on each tile</small></div>
+              <button class="ios-toggle" id="rank-toggle" aria-pressed="true" aria-label="Toggle rank badge display"><span class="ios-toggle-dot"></span></button>
+            </div>
+            <div class="score-toggle-row">
+              <div class="score-toggle-label"><b>Show running total</b><small>Small total shown above each tile</small></div>
+              <button class="ios-toggle" id="total-toggle" aria-pressed="true" aria-label="Toggle running total display"><span class="ios-toggle-dot"></span></button>
+            </div>
+            <div class="score-toggle-row">
+              <div class="score-toggle-label"><b>Show target progress</b><small>Outline fills in as a player nears the target score</small></div>
+              <button class="ios-toggle" id="progress-toggle" aria-pressed="true" aria-label="Toggle target progress ring"><span class="ios-toggle-dot"></span></button>
+            </div>
+            <div class="score-toggle-row">
+              <div class="score-toggle-label"><b>Show +/− buttons</b><small>Adjust buttons on tiles and in the round table</small></div>
+              <button class="ios-toggle" id="adjbtns-toggle" aria-pressed="true" aria-label="Toggle plus and minus buttons"><span class="ios-toggle-dot"></span></button>
+            </div>
+          </div>
         </div>
-        <div class="menu-sec">
-          <button class="menu-new" id="menu-guide">Show guide</button>
-          <button class="menu-new" id="menu-new">Start new game</button>
-          <button class="menu-new" id="menu-install" hidden>Install app</button>
+        <div class="menu-panel" id="menu-panel-game" hidden>
+          <button class="menu-back" data-back>‹ Game</button>
+          <div class="menu-sec" style="margin-top:0;padding-top:0;border-top:none">
+            <div id="mode-list"></div>
+            <p class="menu-note">More games coming — got one you'd like to see?</p>
+            <a class="menu-new" href="mailto:hello@scorepad.uk?subject=Game%20suggestion&body=Hi!%20I%27d%20love%20to%20see%20___%20added%20to%20Scorepad.%0A%0A">Suggest a game</a>
+          </div>
         </div>
-        <div class="menu-sec">
-          <div class="menu-h">Support</div>
-          <a class="support-btn" href="https://ko-fi.com/faelynaegolor" target="_blank" rel="noopener noreferrer">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 8h1a4 4 0 0 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z"/><line x1="6" y1="2" x2="6" y2="5"/><line x1="10" y1="2" x2="10" y2="5"/><line x1="14" y1="2" x2="14" y2="5"/></svg>
-            Buy me a coffee
-          </a>
+        <div class="menu-panel" id="menu-panel-share" hidden>
+          <button class="menu-back" data-back>‹ Play together</button>
+          <div class="menu-sec" style="margin-top:0;padding-top:0;border-top:none">
+            <div class="share-when-off">
+              <p class="menu-note" style="margin:0 0 10px">Share a code so others can add and see scores live from their own phone.</p>
+              <button class="menu-new" id="share-start-btn">Share this game</button>
+              <button class="menu-new" id="share-join-btn">Join with a code</button>
+            </div>
+            <div class="share-when-on" hidden>
+              <div class="share-status-row"><span class="share-status-dot" aria-hidden="true"></span><span class="share-status-text">Connecting…</span></div>
+              <p class="menu-note" style="margin:6px 0 10px">Code: <b class="share-code-text" style="color:var(--text);letter-spacing:2px">——————</b></p>
+              <button class="menu-new menu-reset" id="share-leave-btn">Leave shared game</button>
+            </div>
+          </div>
         </div>
-        <div class="menu-sec">
-          <div class="menu-h">Theme</div>
-          <div class="theme-grid" id="theme-grid"></div>
-        </div>
-        <div class="menu-sec">
-          <button class="menu-new menu-reset" id="menu-reset">Reset everything</button>
+        <div class="menu-panel" id="menu-panel-theme" hidden>
+          <button class="menu-back" data-back>‹ Theme</button>
+          <div class="menu-sec" style="margin-top:0;padding-top:0;border-top:none">
+            <div class="theme-grid" id="theme-grid"></div>
+          </div>
         </div>
       </div>
       </div>
@@ -572,6 +663,15 @@
     <span id="target-lab-pre">Play to</span>
     <input class="target" id="target" type="number" inputmode="numeric" min="1" placeholder="—" aria-label="Target score to win">
     <span id="target-lab-post">points <span class="opt">(optional)</span></span>
+  </div>
+
+  <div class="share-banner" id="share-banner" hidden>
+    <span class="share-status-dot" aria-hidden="true"></span>
+    <div class="share-banner-text">
+      <span class="share-banner-lab">Shared game code</span>
+      <span class="share-code-text">——————</span>
+    </div>
+    <button class="share-copy-btn" id="share-copy-btn">Copy</button>
   </div>
 
   <div class="section-label">Scoreboard</div>
@@ -644,6 +744,20 @@
   </div>
 </div>
 
+<div class="overlay" id="joingame-overlay" hidden>
+  <div class="banner lifesetup-modal" role="dialog" aria-modal="true" aria-labelledby="joingame-title">
+    <button class="guide-x" id="joingame-x" aria-label="Cancel">×</button>
+    <div class="kp-eyebrow">Play together</div>
+    <h2 class="guide-title lifesetup-title" id="joingame-title">Join a game</h2>
+    <p class="guide-lede lifesetup-lede">Enter the 6-character code from whoever's hosting.</p>
+    <input class="lifesetup-input" id="joingame-input" type="text" maxlength="6" autocapitalize="characters" autocomplete="off" placeholder="ABC123" aria-label="Game code" style="letter-spacing:6px;font-size:28px">
+    <div class="lifesetup-actions">
+      <button class="bbtn" id="joingame-cancel">Cancel</button>
+      <button class="bbtn primary" id="joingame-go">Join</button>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="keypad-overlay" hidden>
   <div class="banner keypad-modal" role="dialog" aria-modal="true" aria-labelledby="kp-name">
     <button class="guide-x" id="kp-close" aria-label="Close keypad">×</button>
@@ -683,22 +797,30 @@
   var PALETTE=["#ef4444","#f97316","#eab308","#22c55e","#14b8a6","#3b82f6","#8b5cf6","#ec4899"];
 
   var THEMES={
-    felt:{name:"Felt & ivory",dark:true,
+    felt:{name:"Faelyn",dark:true,
       c:{bg0:"#2a2148",bg1:"#161226",bg2:"#100c1e",panel:"#241d3a",line:"#342b52",text:"#ece7f7",muted:"#9a90b6",paper:"#f4eede",paper2:"#f0e9d6",paperLine:"#e0d6bf",ink:"#2b2438",inkSoft:"#6f6580",accent:"#ff6b5e",accentPress:"#e85a4e",gold:"#f4c552",onGold:"#2b2438"},
       f:{display:'"Fraunces",Georgia,serif',body:'"Outfit",system-ui,sans-serif',mono:'"Space Mono",monospace'},
       sw:["#161226","#ff6b5e","#f4c552","#f4eede"]},
-    pop:{name:"Pastel pop",dark:false,
+    pop:{name:"Martha",dark:false,
       c:{bg0:"#fef1e6",bg1:"#fdf6ef",bg2:"#f6eede",panel:"#ffffff",line:"#ece0d2",text:"#2d2a3a",muted:"#8b8598",paper:"#ffffff",paper2:"#faf6f0",paperLine:"#ece0d2",ink:"#2d2a3a",inkSoft:"#8b8598",accent:"#6c5ce7",accentPress:"#5a4bd0",gold:"#f0a500",onGold:"#3a2a00"},
       f:{display:'"Fredoka",system-ui,sans-serif',body:'"Nunito",system-ui,sans-serif',mono:'"Nunito",system-ui,sans-serif'},
       sw:["#fdf6ef","#6c5ce7","#ff6b81","#2ec5b6"]},
-    arcade:{name:"Neon arcade",dark:true,
+    arcade:{name:"Blaugen",dark:true,
       c:{bg0:"#10152a",bg1:"#0b0e1a",bg2:"#060810",panel:"#141a2e",line:"#26304d",text:"#e8ecff",muted:"#7f8bb5",paper:"#141a2e",paper2:"#172038",paperLine:"#26304d",ink:"#e8ecff",inkSoft:"#7f8bb5",accent:"#ff3ea5",accentPress:"#e42f92",gold:"#22e0ff",onGold:"#04212b"},
       f:{display:'"Chakra Petch",system-ui,sans-serif',body:'"Chakra Petch",system-ui,sans-serif',mono:'"Space Mono",monospace'},
       sw:["#0b0e1a","#22e0ff","#ff3ea5","#e8ecff"]},
-    paper:{name:"Ink & paper",dark:false,
+    paper:{name:"Tarquin",dark:false,
       c:{bg0:"#fbf8ef",bg1:"#f7f3e8",bg2:"#efe9d8",panel:"#fffdf6",line:"#e2d9c4",text:"#22304e",muted:"#6d7791",paper:"#fffdf6",paper2:"#f7f2e6",paperLine:"#e2d9c4",ink:"#22304e",inkSoft:"#6d7791",accent:"#c8791f",accentPress:"#b06614",gold:"#b8493c",onGold:"#ffffff"},
       f:{display:'"Bitter",Georgia,serif',body:'"Outfit",system-ui,sans-serif',mono:'"Space Mono",monospace'},
-      sw:["#f7f3e8","#22304e","#c8791f","#b8493c"]}
+      sw:["#f7f3e8","#22304e","#c8791f","#b8493c"]},
+    barry:{name:"Sleevey Barry",dark:true,
+      c:{bg0:"#2a3524",bg1:"#1a2318",bg2:"#10160e",panel:"#24301f",line:"#3a4a30",text:"#ede6d3",muted:"#9aa88a",paper:"#f3ecd8",paper2:"#ede3c8",paperLine:"#ddd0ab",ink:"#2b2a1f",inkSoft:"#6b6650",accent:"#c97b3d",accentPress:"#b56a2f",gold:"#d4a13d",onGold:"#2b2438"},
+      f:{display:'"Fraunces",Georgia,serif',body:'"Outfit",system-ui,sans-serif',mono:'"Space Mono",monospace'},
+      sw:["#1a2318","#c97b3d","#d4a13d","#f3ecd8"]},
+    bees:{name:"Boo, bees",dark:true,
+      c:{bg0:"#241f10",bg1:"#171308",bg2:"#0d0a04",panel:"#221f14",line:"#3d3820",text:"#fdf6e3",muted:"#a99b6f",paper:"#fdf6e3",paper2:"#f7ecc9",paperLine:"#e8d9a0",ink:"#221f14",inkSoft:"#6b6142",accent:"#f6c93b",accentPress:"#e0b52f",gold:"#d98c1f",onGold:"#1c1a12"},
+      f:{display:'"Fredoka",system-ui,sans-serif',body:'"Nunito",system-ui,sans-serif',mono:'"Nunito",system-ui,sans-serif'},
+      sw:["#171308","#f6c93b","#d98c1f","#fdf6e3"]}
   };
   var MODES={
     standard:{label:"Standard",note:"Just the number pad, no target",target:"",keypad:"standard"},
@@ -739,12 +861,16 @@
     // tell them apart. Old saves predate this field; every mode used to have keypadType===its
     // own id, so that's a safe migration guess.
     if(typeof s.modeId!=="string"||!MODES[s.modeId])s.modeId=MODES[s.keypadType]?s.keypadType:"standard";
+    if(typeof s.gameCode!=="string")s.gameCode=null;
     var used=s.players.map(function(p){return p.color;}).filter(Boolean);
     s.players.forEach(function(p){if(!p.color){var c=PALETTE.filter(function(x){return used.indexOf(x)<0;})[0]||PALETTE[used.length%PALETTE.length];p.color=c;used.push(c);}});
   }
   function nextColor(){var used=state.players.map(function(p){return p.color;});return PALETTE.filter(function(x){return used.indexOf(x)<0;})[0]||PALETTE[state.players.length%PALETTE.length];}
   function load(){if(!canStore)return null;try{var r=localStorage.getItem(KEY);return r?JSON.parse(r):null;}catch(e){return null;}}
-  function save(){if(!canStore)return;try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+  function save(){
+    if(canStore){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+    cloudMirror();
+  }
 
   function totalFor(pid){var t=0;for(var i=0;i<state.rounds.length;i++){var e=state.rounds[i];if(e.marker)continue;var v=e.scores[pid];if(typeof v==="number"&&!isNaN(v))t+=v;}return t;}
   // state.rounds is a flat chronological ledger of scoring entries {id,scores:{pid:delta}}
@@ -835,14 +961,14 @@
     var g=document.getElementById("theme-grid");g.innerHTML="";
     Object.keys(THEMES).forEach(function(id){
       var t=THEMES[id];
-      var b=document.createElement("button");b.className="theme-opt";b.setAttribute("data-theme",id);
+      var b=document.createElement("button");b.className="theme-opt";b.setAttribute("data-theme-choice",id);
       b.innerHTML='<span class="theme-sw">'+t.sw.map(function(c){return '<span style="background:'+c+'"></span>';}).join("")+'</span><span class="theme-name">'+t.name+'</span>';
       b.addEventListener("click",function(){applyTheme(id);});
       g.appendChild(b);
     });
   }
   function syncThemeMenu(){
-    document.querySelectorAll(".theme-opt").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-theme")===currentTheme);});
+    document.querySelectorAll(".theme-opt").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-theme-choice")===currentTheme);});
   }
   function buildModeMenu(){
     var l=document.getElementById("mode-list");l.innerHTML="";
@@ -992,7 +1118,16 @@
     t.timeoutId=setTimeout(function(){tickerEl.classList.remove("show");delete tickers[playerId];},2000);
   }
 
-  function openMenu(){menuEl.hidden=false;menuBtn.setAttribute("aria-expanded","true");}
+  function showMenuPanel(id){
+    document.querySelectorAll(".menu-panel").forEach(function(p){p.hidden=(p.id!=="menu-panel-"+id);});
+  }
+  document.querySelectorAll(".menu-cat").forEach(function(b){
+    b.addEventListener("click",function(){showMenuPanel(b.getAttribute("data-panel"));});
+  });
+  document.querySelectorAll(".menu-back").forEach(function(b){
+    b.addEventListener("click",function(){showMenuPanel("root");});
+  });
+  function openMenu(){showMenuPanel("root");menuEl.hidden=false;menuBtn.setAttribute("aria-expanded","true");}
   function closeMenu(){menuEl.hidden=true;menuBtn.setAttribute("aria-expanded","false");}
   menuBtn.addEventListener("click",function(e){e.stopPropagation();menuEl.hidden?openMenu():closeMenu();});
   document.addEventListener("click",function(e){
@@ -1889,7 +2024,253 @@
   function rankTier(rank){return rank===1?"gold":rank===2?"silver":rank===3?"bronze":"plain";}
   function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
 
+  // ---- shared game (cloud sync) ----
+  // Firebase is the single source of truth while connected: mutation code elsewhere in this file
+  // is completely unchanged (still edits state.rounds/state.players directly and calls save()) --
+  // cloudMirror() just watches save() and mirrors whatever changed out to Firebase afterward.
+  // Incoming data from other devices comes back through the exact same save()+renderAll() path
+  // via applyCloudSnapshot, so there's only ever one code path that actually renders state.
+  // Meta (game name/target/mode settings) is small, singular, and rarely touched by more than
+  // one person at once, so it's still synced as a whole-object overwrite. Rounds and players are
+  // both diffed per-entry instead, for the same reason: several people are expected to touch
+  // *different* rounds/players at close to the same moment (everyone tapping their own score,
+  // everyone typing their own name in at once), and a whole-list overwrite would let whichever
+  // write lands last silently erase everyone else's change from that same round-trip window.
+  // Round entries are keyed by a fresh push() key (chronologically sortable, so order survives
+  // a round-trip) and have their local id swapped for that key once the echo comes back -- see
+  // applyCloudSnapshot. Players can't use that trick: a player's id is also the foreign key every
+  // round entry's scores use to attribute points to them, so swapping it after the fact would
+  // orphan their entire score history. Players are instead keyed by their own (already-stable)
+  // local id directly, with an explicit `order` field standing in for position since Firebase
+  // doesn't reliably preserve the array order of non-numeric keys.
+  var CLOUD_META_FIELDS=["gameName","targetScore","scoreMode","keypadType","modeId","countdown"];
+  var FB=null;
+  var cloud={code:null,connected:false,seeding:false,applyingRemote:false,keyMap:{},valueCache:{},playerCache:{},lastMeta:null,unsub:null,unsubConn:null};
+
+  function cloudGameRef(code){return FB.child(FB.ref(FB.db),"games/"+code);}
+  function cloudMirror(){
+    if(!FB||!cloud.code||cloud.applyingRemote)return;
+    cloudMirrorMeta();
+    cloudMirrorPlayers();
+    cloudMirrorRounds();
+  }
+  function cloudMetaSnapshot(){
+    var meta={};
+    CLOUD_META_FIELDS.forEach(function(k){meta[k]=(state[k]!==undefined&&state[k]!==null)?state[k]:"";});
+    return meta;
+  }
+  function cloudMirrorMeta(){
+    var meta=cloudMetaSnapshot(),metaJson=JSON.stringify(meta);
+    if(cloud.lastMeta!==metaJson){cloud.lastMeta=metaJson;FB.set(FB.child(cloudGameRef(cloud.code),"meta"),meta);}
+  }
+  function cloudMirrorPlayers(){
+    var playersRef=FB.child(cloudGameRef(cloud.code),"players");
+    var seen={};
+    state.players.forEach(function(p,i){
+      seen[p.id]=true;
+      var value={name:p.name||"",color:p.color||"",order:i};
+      var json=JSON.stringify(value);
+      if(cloud.playerCache[p.id]===json)return;
+      cloud.playerCache[p.id]=json;
+      FB.set(FB.child(playersRef,p.id),value);
+    });
+    Object.keys(cloud.playerCache).forEach(function(id){
+      if(seen[id])return;
+      delete cloud.playerCache[id];
+      FB.remove(FB.child(playersRef,id));
+    });
+  }
+  function cloudMirrorRounds(){
+    var roundsRef=FB.child(cloudGameRef(cloud.code),"rounds");
+    var seen={};
+    state.rounds.forEach(function(entry){
+      seen[entry.id]=true;
+      var value=entry.marker?{marker:true}:{scores:entry.scores};
+      var json=JSON.stringify(value);
+      if(cloud.valueCache[entry.id]===json)return;
+      cloud.valueCache[entry.id]=json;
+      var key=cloud.keyMap[entry.id];
+      if(key){FB.set(FB.child(roundsRef,key),value);}
+      else{var newRef=FB.push(roundsRef,value);cloud.keyMap[entry.id]=newRef.key;}
+    });
+    Object.keys(cloud.keyMap).forEach(function(localId){
+      if(seen[localId])return;
+      FB.remove(FB.child(roundsRef,cloud.keyMap[localId]));
+      delete cloud.keyMap[localId];
+      delete cloud.valueCache[localId];
+    });
+  }
+  function applyCloudSnapshot(val){
+    cloud.applyingRemote=true;
+    val=val||{};
+    var meta=val.meta||{};
+    CLOUD_META_FIELDS.forEach(function(k){if(meta[k]!==undefined)state[k]=meta[k];});
+    var playersVal=val.players||{};
+    var pids=Object.keys(playersVal).sort(function(a,b){return(playersVal[a].order||0)-(playersVal[b].order||0);});
+    var newPlayerCache={};
+    state.players=pids.map(function(id){
+      var v=playersVal[id]||{};
+      newPlayerCache[id]=JSON.stringify({name:v.name||"",color:v.color||"",order:v.order||0});
+      return{id:id,name:v.name||"",color:v.color||null};
+    });
+    cloud.playerCache=newPlayerCache;
+    var roundsVal=val.rounds||{};
+    var keys=Object.keys(roundsVal).sort();
+    var newKeyMap={},newValueCache={};
+    state.rounds=keys.map(function(key){
+      var v=roundsVal[key]||{};
+      var value=v.marker?{marker:true}:{scores:v.scores||{}};
+      newKeyMap[key]=key;
+      newValueCache[key]=JSON.stringify(value);
+      return v.marker?{id:key,marker:true}:{id:key,scores:v.scores||{}};
+    });
+    cloud.keyMap=newKeyMap;
+    cloud.valueCache=newValueCache;
+    cloud.lastMeta=JSON.stringify(cloudMetaSnapshot());
+    ensureShape(state);
+    pendingRestore=null;
+    document.body.setAttribute("data-scoremode",state.scoreMode);
+    // Only touch inputs the user isn't actively typing in -- a remote update landing mid-keystroke
+    // shouldn't yank focus or overwrite what they're about to type (same rule updateCurrentRow
+    // already follows for the round table's live cell inputs).
+    if(document.activeElement!==gameNameEl)gameNameEl.value=state.gameName;
+    if(document.activeElement!==targetEl)targetEl.value=state.targetScore;
+    save();
+    cloud.applyingRemote=false;
+    renderAll();
+    syncModeMenu();syncScoreModeMenu();syncTargetLabel();syncShareUI();
+  }
+  function connectCloud(code,seeding){
+    cloud.code=code;
+    cloud.seeding=!!seeding;
+    cloud.keyMap={};cloud.valueCache={};cloud.playerCache={};cloud.lastMeta=null;
+    state.gameCode=code;
+    if(cloud.unsub){cloud.unsub();cloud.unsub=null;}
+    cloud.unsub=FB.onValue(cloudGameRef(code),function(snap){
+      var val=snap.val();
+      if(cloud.seeding){
+        cloud.seeding=false;
+        if(val&&(val.players||val.rounds||val.meta)){applyCloudSnapshot(val);}
+        else{cloudMirror();}
+        return;
+      }
+      applyCloudSnapshot(val);
+    },function(err){console.error("Scorepad cloud sync error",err);});
+    if(!cloud.unsubConn){
+      cloud.unsubConn=FB.onValue(FB.ref(FB.db,".info/connected"),function(snap){
+        cloud.connected=!!snap.val();
+        syncShareUI();
+      });
+    }
+  }
+  function genGameCode(){
+    var chars="ABCDEFGHJKMNPQRSTUVWXYZ23456789",s="";
+    for(var i=0;i<6;i++)s+=chars[Math.floor(Math.random()*chars.length)];
+    return s;
+  }
+  function startSharedGame(){
+    if(!FB){alert("Can't reach the sync service right now — check your connection and try again.");return;}
+    var code=genGameCode();
+    // Written once, outside the meta object cloudMirrorMeta() overwrites wholesale on every
+    // change -- a sibling field so nothing else in the sync path can ever touch or reset it.
+    // Lets a maintenance script find and clear out old abandoned games later without needing
+    // every game to be reasoned about individually.
+    FB.set(FB.child(cloudGameRef(code),"createdAt"),Date.now());
+    connectCloud(code,true);
+    closeMenu();
+    syncShareUI();
+  }
+  function openJoinGame(){
+    closeMenu();
+    var input=document.getElementById("joingame-input");
+    input.value="";
+    document.getElementById("joingame-overlay").hidden=false;
+    input.focus();
+  }
+  function closeJoinGame(){document.getElementById("joingame-overlay").hidden=true;}
+  function joinSharedGame(){
+    if(!FB){alert("Can't reach the sync service right now — check your connection and try again.");return;}
+    var code=(document.getElementById("joingame-input").value||"").trim().toUpperCase();
+    if(code.length<6){alert("Enter the 6-character game code.");return;}
+    var goBtn=document.getElementById("joingame-go");
+    goBtn.disabled=true;goBtn.textContent="Joining…";
+    var peekUnsub=FB.onValue(cloudGameRef(code),function(snap){
+      peekUnsub();
+      goBtn.disabled=false;goBtn.textContent="Join";
+      var val=snap.val();
+      if(!val||!(val.players||val.rounds||val.meta)){
+        alert("No shared game found with that code. Double-check it and try again.");
+        return;
+      }
+      connectCloud(code,false);
+      closeJoinGame();
+      syncShareUI();
+    },function(){
+      goBtn.disabled=false;goBtn.textContent="Join";
+      alert("Couldn't reach the sync service. Check your connection and try again.");
+    });
+  }
+  function leaveSharedGame(){
+    if(cloud.unsub){cloud.unsub();cloud.unsub=null;}
+    cloud.code=null;cloud.keyMap={};cloud.valueCache={};cloud.playerCache={};cloud.lastMeta=null;
+    state.gameCode=null;
+    save();
+    syncShareUI();
+    closeMenu();
+  }
+  function copyShareCode(){
+    if(!cloud.code)return;
+    var btn=document.getElementById("share-copy-btn");
+    var done=function(){if(!btn)return;var orig=btn.textContent;btn.textContent="Copied!";setTimeout(function(){btn.textContent=orig;},1500);};
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(cloud.code).then(done).catch(function(){prompt("Copy this code:",cloud.code);});
+    } else {
+      prompt("Copy this code:",cloud.code);
+    }
+  }
+  function syncShareUI(){
+    var connected=!!cloud.code;
+    document.querySelectorAll(".share-when-off").forEach(function(el){el.hidden=connected;});
+    document.querySelectorAll(".share-when-on").forEach(function(el){el.hidden=!connected;});
+    var banner=document.getElementById("share-banner");
+    if(banner)banner.hidden=!connected;
+    document.querySelectorAll(".share-status-dot").forEach(function(el){el.classList.toggle("live",connected&&cloud.connected);});
+    document.querySelectorAll(".share-status-text").forEach(function(el){el.textContent=connected?(cloud.connected?"Live":"Connecting…"):"";});
+    if(connected)document.querySelectorAll(".share-code-text").forEach(function(el){el.textContent=cloud.code;});
+  }
+  document.getElementById("share-start-btn").addEventListener("click",startSharedGame);
+  document.getElementById("share-join-btn").addEventListener("click",openJoinGame);
+  document.getElementById("share-leave-btn").addEventListener("click",function(){
+    if(!confirm("Stop syncing with other devices? Your scores stay on this device, but others will no longer see your changes."))return;
+    leaveSharedGame();
+  });
+  document.getElementById("share-copy-btn").addEventListener("click",copyShareCode);
+  document.getElementById("joingame-x").addEventListener("click",closeJoinGame);
+  document.getElementById("joingame-cancel").addEventListener("click",closeJoinGame);
+  document.getElementById("joingame-go").addEventListener("click",joinSharedGame);
+  document.getElementById("joingame-input").addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();joinSharedGame();}});
+  document.getElementById("joingame-overlay").addEventListener("click",function(e){if(e.target===document.getElementById("joingame-overlay"))closeJoinGame();});
+  window.addEventListener("firebase-ready",function(){
+    FB=window.__firebase;
+    if(!FB)return;
+    if(state.gameCode){
+      // Same validation as joinSharedGame -- a stored code that no longer resolves to a real
+      // game (deleted, expired, or otherwise gone) should quietly drop back to local-only
+      // instead of applying an empty snapshot and wiping out whatever's on this device.
+      var reconnectCode=state.gameCode;
+      var peekUnsub=FB.onValue(cloudGameRef(reconnectCode),function(snap){
+        peekUnsub();
+        var val=snap.val();
+        if(val&&(val.players||val.rounds||val.meta)){connectCloud(reconnectCode,false);}
+        else{state.gameCode=null;save();}
+        syncShareUI();
+      },function(){syncShareUI();});
+    }
+    syncShareUI();
+  });
+
   buildThemeMenu();buildModeMenu();buildScoreModeMenu();applyTheme(currentTheme);syncDisplayToggles();syncTargetLabel();applyScoreMode(state.scoreMode);
+  syncShareUI();
   if(!state.seenGuide)openGuide();
 })();
 </script>
