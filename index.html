@@ -267,6 +267,10 @@
   .rndcell .rlab{display:inline-flex;align-items:center;gap:8px}
   .delrnd{border:none;background:transparent;color:var(--ink-soft);opacity:.6;cursor:pointer;font-size:15px;line-height:1;padding:2px;border-radius:5px;transition:.15s}
   .delrnd:hover{color:var(--accent-press);opacity:1}
+  .rowmove-group{display:inline-flex;flex-direction:column;gap:1px}
+  .rowmove{border:none;background:transparent;color:var(--ink-soft);opacity:.5;cursor:pointer;font-size:8px;line-height:1;padding:1px 3px;border-radius:3px;transition:.15s}
+  .rowmove:hover:not(:disabled){color:var(--accent-press);opacity:1}
+  .rowmove:disabled{opacity:.15;cursor:default}
   .scoreinput{width:100%;min-width:64px;border:none;background:transparent;text-align:center;font-family:var(--font-mono);font-weight:700;font-size:17px;color:var(--ink);padding:14px 6px;font-variant-numeric:tabular-nums;-moz-appearance:textfield}
   .scoreinput::placeholder{color:var(--ink-soft);opacity:.45;font-weight:400}
   .scoreinput:focus{outline:none;background:color-mix(in srgb,var(--accent) 12%,transparent)}
@@ -828,8 +832,23 @@
     flip7:{label:"Flip 7",name:"Flip 7",target:"200",note:"Play to 200, with the card picker",keypad:"flip7"},
     sushigo:{label:"Sushi Go!",name:"Sushi Go!",target:"",note:"Three rounds, with the card picker",keypad:"sushigo"},
     starrealms:{label:"Star Realms",name:"Star Realms",target:"50",note:"Starts at 50 Authority, counts down",keypad:"starrealms",countdown:true},
-    yugioh:{label:"Yu-Gi-Oh!",name:"Yu-Gi-Oh!",target:"8000",note:"Starts at 8000 LP, counts down",keypad:"yugioh",countdown:true}
+    yugioh:{label:"Yu-Gi-Oh!",name:"Yu-Gi-Oh!",target:"8000",note:"Starts at 8000 LP, counts down",keypad:"yugioh",countdown:true},
+    wingspan:{label:"Wingspan",name:"Wingspan",target:"",note:"Table view — each row is a scoring category, not a round",keypad:"standard",rounds:true},
+    wyrmspan:{label:"Wyrmspan",name:"Wyrmspan",target:"",note:"Table view — each row is a scoring category, not a round",keypad:"standard",rounds:true}
   };
+  // Wingspan/Wyrmspan don't really have "rounds" the way Sushi Go or a card game does -- final
+  // scoring is a fixed list of categories (bird points, eggs, bonus card, ...) added up once at
+  // the end. Re-using the existing round-by-round table for this (one category per row instead
+  // of one hand per row) means no new keypad or calculation logic is needed at all -- players
+  // just type each category's subtotal into their column, same table UI, same Total row.
+  var CATEGORY_LABELS={
+    wingspan:["Bird points","Bonus card","Round 1 goal","Round 2 goal","Round 3 goal","Round 4 goal","Eggs","Cached food","Tucked cards"],
+    wyrmspan:["Dragon points","Dragon Guild","Eggs","Cached resources","Tucked cards","Public objectives","Remaining items"]
+  };
+  function roundLabel(idx){
+    var cats=CATEGORY_LABELS[state.modeId];
+    return (cats&&cats[idx])?cats[idx]:"R"+(idx+1);
+  }
   var VARMAP={bg0:"--bg0",bg1:"--bg1",bg2:"--bg2",panel:"--panel",line:"--line",text:"--text",muted:"--muted",paper:"--paper",paper2:"--paper2",paperLine:"--paper-line",ink:"--ink",inkSoft:"--ink-soft",accent:"--accent",accentPress:"--accent-press",gold:"--gold",onGold:"--on-gold"};
 
   var canStore=true;
@@ -862,6 +881,7 @@
     // own id, so that's a safe migration guess.
     if(typeof s.modeId!=="string"||!MODES[s.modeId])s.modeId=MODES[s.keypadType]?s.keypadType:"standard";
     if(typeof s.gameCode!=="string")s.gameCode=null;
+    if(typeof s.activeMarkerId!=="string")s.activeMarkerId=null;
     var used=s.players.map(function(p){return p.color;}).filter(Boolean);
     s.players.forEach(function(p){if(!p.color){var c=PALETTE.filter(function(x){return used.indexOf(x)<0;})[0]||PALETTE[used.length%PALETTE.length];p.color=c;used.push(c);}});
   }
@@ -880,7 +900,7 @@
   function buildSegments(){
     var completed=[],cur={};
     state.rounds.forEach(function(e){
-      if(e.marker){completed.push({markerId:e.id,scores:cur});cur={};}
+      if(e.marker){completed.push({markerId:e.id,scores:cur,category:e.category});cur={};}
       else{
         Object.keys(e.scores).forEach(function(pid){
           var v=e.scores[pid];
@@ -984,6 +1004,19 @@
   function syncModeMenu(){
     document.querySelectorAll(".mode-opt").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-mode")===state.modeId);});
   }
+  // Pushes a fresh marker+category segment for every category of category-table mode `id` (see
+  // MODES/CATEGORY_LABELS), pointing activeMarkerId at the first one if it isn't set yet. Shared
+  // by selectMode (first pick) and any "start over but keep the mode" action (new game / new game
+  // banner button) so the whole table always comes back pre-populated rather than empty.
+  function seedCategories(id){
+    var cats=CATEGORY_LABELS[id];
+    if(!cats)return;
+    cats.forEach(function(catLabel){
+      var mk2={id:uid(),marker:true,category:catLabel};
+      state.rounds.push(mk2);
+      if(state.activeMarkerId===null)state.activeMarkerId=mk2.id;
+    });
+  }
   function selectMode(id){
     var m=MODES[id];if(!m)return;
     if(!state.gameNameCustom){
@@ -994,8 +1027,28 @@
     state.keypadType=m.keypad||"standard";
     state.countdown=!!m.countdown;
     state.modeId=id;
+    // Category-table modes (Wingspan, Wyrmspan) only make sense in round-by-round mode -- each
+    // "round" row is really a scoring category, so force the table on rather than leaving it to
+    // the player to notice and flip the toggle themselves.
+    if(m.rounds){
+      state.scoreMode="rounds";document.body.setAttribute("data-scoremode","rounds");
+      // The category list is fixed and known up front (unlike open-ended rounds), so pre-seed a
+      // real row for EVERY category immediately -- the whole scoresheet shows up ready to fill
+      // in, rather than making players tap "+ Add category" repeatedly just to reveal rows that
+      // were always going to exist. Every category gets its own marker (category is stamped on
+      // the marker itself, not inferred from table position) -- there's no open-ended "current"
+      // tail here the way a normal game has one; instead a separate activeMarkerId pointer says
+      // which category tile taps currently target, moved explicitly via the row's up/down
+      // buttons rather than being tied to whichever row happens to be physically last. Only on a
+      // genuinely fresh game -- switching into this mode mid-game with existing rounds shouldn't
+      // silently inject rows into whatever a player already has in progress.
+      if(state.rounds.length===0){
+        state.activeMarkerId=null;
+        seedCategories(id);
+      }
+    }
     syncTargetLabel();
-    save();syncModeMenu();refreshDynamic();closeMenu();
+    save();syncModeMenu();syncScoreModeMenu();renderAll();closeMenu();
   }
   function syncTargetLabel(){
     var pre=document.getElementById("target-lab-pre"),post=document.getElementById("target-lab-post");
@@ -1079,13 +1132,29 @@
   }
 
   var tickers={};
-  function pendingHas(playerId){return Object.prototype.hasOwnProperty.call(buildSegments().current,playerId);}
-  function pendingScoreFor(playerId){var c=buildSegments().current;return typeof c[playerId]==="number"?c[playerId]:0;}
+  function pendingHas(playerId){
+    if(CATEGORY_LABELS[state.modeId])return activeSegmentValue(playerId).has;
+    return Object.prototype.hasOwnProperty.call(buildSegments().current,playerId);
+  }
+  function pendingScoreFor(playerId){
+    if(CATEGORY_LABELS[state.modeId])return activeSegmentValue(playerId).val;
+    var c=buildSegments().current;return typeof c[playerId]==="number"?c[playerId]:0;
+  }
   // Writes are the same regardless of scoring mode — every tap/keypad action appends to (or
   // merges into) the shared ledger. Round-by-round mode just displays activity since the last
   // marker; running mode displays the grand total. This is what lets you switch modes mid-game.
+  // Category-table modes are the one exception: there's no open ledger tail to append to (every
+  // category already has its own segment), so taps adjust whichever segment activeMarkerId
+  // currently points at instead.
   function addAdjustment(playerId,delta){
     pendingRestore=null;
+    if(CATEGORY_LABELS[state.modeId]&&state.activeMarkerId){
+      adjustActiveSegment(playerId,delta);
+      save();
+      updateTicker(playerId,delta);
+      refreshDynamic();
+      return;
+    }
     var now=Date.now();
     var t=tickers[playerId];
     var withinWindow=t&&(now-t.lastTime)<2000;
@@ -1166,7 +1235,9 @@
 
   function startNewGame(){
     if(state.rounds.length&&!confirm("Start a new game? This clears all rounds but keeps your players."))return;
-    state.rounds=[];save();renderAll();clearPendingRestore();
+    state.rounds=[];state.activeMarkerId=null;
+    seedCategories(state.modeId);
+    save();renderAll();clearPendingRestore();
   }
   document.getElementById("menu-new").addEventListener("click",function(){startNewGame();closeMenu();});
   document.getElementById("newgamebtn").addEventListener("click",startNewGame);
@@ -1234,6 +1305,8 @@
     state.showProgress=true;
     state.showAdjustBtns=true;
     state.countdown=false;
+    state.activeMarkerId=null;
+    state.seenGuide=false;
     ensureShape(state);
     save();
     gameNameEl.value="";targetEl.value="";
@@ -1244,6 +1317,7 @@
     pendingRestore=null;
     renderAll();
     closeMenu();
+    openGuide();
   });
 
   // ---- welcome guide ----
@@ -1321,7 +1395,12 @@
     document.getElementById("kp-name").textContent=pl.name||"—";
     document.getElementById("kp-name").style.color=pl.color;
     if(state.scoreMode==="rounds"){
-      document.getElementById("kp-current-lab").textContent="this round";
+      var activeLab="this round";
+      if(CATEGORY_LABELS[state.modeId]&&state.activeMarkerId){
+        var segActive=buildSegments().completed.filter(function(s){return s.markerId===state.activeMarkerId;})[0];
+        if(segActive&&segActive.category)activeLab=segActive.category;
+      }
+      document.getElementById("kp-current-lab").textContent=activeLab;
       kpState.baseCurrent=pendingScoreFor(playerId);
     } else {
       document.getElementById("kp-current-lab").textContent="current";
@@ -1608,6 +1687,7 @@
       state.rounds.forEach(function(r){if(!r.marker&&pendingRestore.scores[r.id]!==undefined)r.scores[pendingRestore.player.id]=pendingRestore.scores[r.id];});
       pendingRestore=null;save();renderAll();return;
     }
+    if(CATEGORY_LABELS[state.modeId])return;
     if(!state.rounds.length)return;
     state.rounds.pop();save();renderAll();
   });
@@ -1618,6 +1698,10 @@
       btn.textContent="Restore "+(pendingRestore.player.name||"player");
       return;
     }
+    // Category-table modes splice entries into arbitrary array positions (not always the tail),
+    // so "undo = pop the last array entry" doesn't map to anything the user would recognise --
+    // use each row's × to delete a category instead.
+    if(CATEGORY_LABELS[state.modeId]){btn.disabled=true;btn.textContent="Use × next to a category to remove it";return;}
     if(!state.rounds.length){btn.disabled=true;btn.textContent="Nothing to undo";return;}
     var last=state.rounds[state.rounds.length-1];
     if(last.marker){btn.disabled=false;btn.textContent="Undo last round";return;}
@@ -1716,19 +1800,67 @@
     if(markerIdx<0)return;
     var startIdx=0;
     for(var i=markerIdx-1;i>=0;i--){if(state.rounds[i].marker){startIdx=i+1;break;}}
+    if(CATEGORY_LABELS[state.modeId]&&state.activeMarkerId===markerId){
+      var segs=buildSegments().completed;
+      var idx=segs.findIndex(function(s){return s.markerId===markerId;});
+      var fallback=segs[idx+1]||segs[idx-1];
+      state.activeMarkerId=fallback?fallback.markerId:null;
+    }
     state.rounds.splice(startIdx,markerIdx-startIdx+1);
+    save();renderAll();
+  }
+  // Category-table modes (Wingspan, Wyrmspan) have no open-ended "current" ledger tail -- every
+  // category is pre-seeded as its own real segment (see selectMode). Instead, activeMarkerId is
+  // a movable pointer saying which category's segment tile taps and the keypad currently target;
+  // moving it up/down just repoints it to a neighbouring segment, no data moves at all.
+  function adjustActiveSegment(playerId,delta){
+    var markerId=state.activeMarkerId;
+    if(!markerId)return;
+    var markerIdx=state.rounds.findIndex(function(e){return e.id===markerId;});
+    if(markerIdx<0)return;
+    var startIdx=0;
+    for(var i=markerIdx-1;i>=0;i--){if(state.rounds[i].marker){startIdx=i+1;break;}}
+    var cur=0;
+    for(var j=startIdx;j<markerIdx;j++){var v=state.rounds[j].scores[playerId];if(typeof v==="number"&&!isNaN(v))cur+=v;}
+    setSegmentValue(markerId,playerId,String(cur+delta));
+  }
+  function activeSegmentValue(playerId){
+    if(!state.activeMarkerId)return{has:false,val:0};
+    var seg=buildSegments().completed.filter(function(s){return s.markerId===state.activeMarkerId;})[0];
+    if(!seg)return{has:false,val:0};
+    var has=Object.prototype.hasOwnProperty.call(seg.scores,playerId);
+    return{has:has,val:has?seg.scores[playerId]:0};
+  }
+  function moveActiveCategory(dir){
+    var segs=buildSegments().completed;
+    var idx=segs.findIndex(function(s){return s.markerId===state.activeMarkerId;});
+    if(idx<0)return;
+    var newIdx=idx+dir;
+    if(newIdx<0||newIdx>=segs.length)return;
+    state.activeMarkerId=segs[newIdx].markerId;
     save();renderAll();
   }
 
   function renderSheet(){
     if(!state.players.length){sheetEl.innerHTML='<div class="empty">Add a player above to start keeping score.</div>';return;}
     var segs=buildSegments(),completed=segs.completed,current=segs.current;
-    var html='<div class="sheet-scroll"><table><thead><tr><th class="rndhead">Round</th>';
+    var isCategoryMode=!!CATEGORY_LABELS[state.modeId];
+    var rndheadLabel=isCategoryMode?"Category":"Round";
+    var addRoundBtn=document.getElementById("addround");
+    if(addRoundBtn)addRoundBtn.textContent=isCategoryMode?"+ Add category":"+ Add round";
+    var html='<div class="sheet-scroll"><table><thead><tr><th class="rndhead">'+rndheadLabel+'</th>';
     state.players.forEach(function(pl){html+='<th data-head="'+pl.id+'"><span class="hname"><span class="hdot" style="background:'+pl.color+'"></span><span class="htext">'+esc(pl.name||"—")+'</span></span></th>';});
     html+='</tr></thead><tbody>';
     for(var idx=0;idx<completed.length;idx++){
       var seg=completed[idx];
-      html+='<tr><td class="rndcell"><span class="rlab"><button class="delrnd" data-del="'+seg.markerId+'" title="Delete round" aria-label="Delete round">×</button>R'+(idx+1)+'</span></td>';
+      // Category-table modes have no open ledger tail -- every category is already its own real
+      // segment (see selectMode) -- so instead of one hardcoded "current" row at the bottom, the
+      // row matching activeMarkerId gets the same "now" tag/tint plus up/down buttons that move
+      // WHICH category is active (what tile taps target), not the row's position or data.
+      var isActive=isCategoryMode&&seg.markerId===state.activeMarkerId;
+      var activeHtml=isActive?
+        '<span class="rowmove-group"><button class="rowmove up" data-move-active-up '+(idx===0?"disabled":"")+' aria-label="Make previous category active">▲</button><button class="rowmove down" data-move-active-down '+(idx===completed.length-1?"disabled":"")+' aria-label="Make next category active">▼</button></span>':"";
+      html+='<tr class="'+(isActive?"rnd-current-row":"")+'" data-marker="'+seg.markerId+'"><td class="rndcell"><span class="rlab">'+activeHtml+'<button class="delrnd" data-del="'+seg.markerId+'" title="Delete round" aria-label="Delete round">×</button>'+esc(seg.category||roundLabel(idx))+(isActive?'<span class="rnd-current-tag">now</span>':'')+'</span></td>';
       state.players.forEach(function(pl){var v=seg.scores[pl.id];var val=(typeof v==="number"&&!isNaN(v))?v:"";html+='<td data-cell="'+seg.markerId+'|'+pl.id+'"><div class="cell-adj">'+
         '<button class="adjbtn small minus" data-r="'+seg.markerId+'" data-p="'+pl.id+'" aria-label="Subtract 1">−</button>'+
         '<input class="scoreinput" inputmode="numeric" type="number" step="1" data-r="'+seg.markerId+'" data-p="'+pl.id+'" value="'+val+'" placeholder="0" aria-label="Score">'+
@@ -1736,16 +1868,18 @@
       '</div></td>';});
       html+='</tr>';
     }
-    // The round in progress -- same shape as a committed round, tinted and tagged "now" instead
-    // of a delete button, since there's no marker yet to delete. Edits here (or on the tiles --
-    // they write to the same ledger tail) show up in real time via updateCurrentRow/refreshDynamic.
-    html+='<tr class="rnd-current-row"><td class="rndcell"><span class="rlab">R'+(completed.length+1)+'<span class="rnd-current-tag">now</span></span></td>';
-    state.players.forEach(function(pl){var v=current[pl.id];var val=(typeof v==="number"&&!isNaN(v))?v:"";html+='<td data-cell="current|'+pl.id+'"><div class="cell-adj">'+
-      '<button class="adjbtn small minus" data-r="current" data-p="'+pl.id+'" aria-label="Subtract 1">−</button>'+
-      '<input class="scoreinput" inputmode="numeric" type="number" step="1" data-r="current" data-p="'+pl.id+'" value="'+val+'" placeholder="0" aria-label="Score">'+
-      '<button class="adjbtn small plus" data-r="current" data-p="'+pl.id+'" aria-label="Add 1">+</button>'+
-    '</div></td>';});
-    html+='</tr>';
+    if(!isCategoryMode){
+      // The round in progress -- same shape as a committed round, tinted and tagged "now" instead
+      // of a delete button, since there's no marker yet to delete. Edits here (or on the tiles --
+      // they write to the same ledger tail) show up in real time via updateCurrentRow/refreshDynamic.
+      html+='<tr class="rnd-current-row"><td class="rndcell"><span class="rlab">'+esc(roundLabel(completed.length))+'<span class="rnd-current-tag">now</span></span></td>';
+      state.players.forEach(function(pl){var v=current[pl.id];var val=(typeof v==="number"&&!isNaN(v))?v:"";html+='<td data-cell="current|'+pl.id+'"><div class="cell-adj">'+
+        '<button class="adjbtn small minus" data-r="current" data-p="'+pl.id+'" aria-label="Subtract 1">−</button>'+
+        '<input class="scoreinput" inputmode="numeric" type="number" step="1" data-r="current" data-p="'+pl.id+'" value="'+val+'" placeholder="0" aria-label="Score">'+
+        '<button class="adjbtn small plus" data-r="current" data-p="'+pl.id+'" aria-label="Add 1">+</button>'+
+      '</div></td>';});
+      html+='</tr>';
+    }
     html+='</tbody><tfoot><tr class="totalrow"><td class="rndcell totalcell-lab">Total:</td>';
     var roundTotals=state.players.map(function(pl){
       var t=0;completed.forEach(function(seg){var v=seg.scores[pl.id];if(typeof v==="number"&&!isNaN(v))t+=v;});
@@ -1787,6 +1921,8 @@
       if(!confirm("Delete this round? This can't be undone."))return;
       deleteRound(btn.getAttribute("data-del"));
     });});
+    sheetEl.querySelectorAll("[data-move-active-up]").forEach(function(btn){btn.addEventListener("click",function(){moveActiveCategory(-1);});});
+    sheetEl.querySelectorAll("[data-move-active-down]").forEach(function(btn){btn.addEventListener("click",function(){moveActiveCategory(1);});});
   }
 
   function markTopScorers(segs){
@@ -1805,9 +1941,16 @@
   // keypad edit elsewhere doesn't yank focus away from an input the user might be mid-edit on.
   function updateCurrentRow(segs){
     var row=sheetEl.querySelector(".rnd-current-row");if(!row)return;
+    var isCategoryMode=!!CATEGORY_LABELS[state.modeId];
     state.players.forEach(function(pl){
-      var v=segs.current[pl.id];
-      var val=(typeof v==="number"&&!isNaN(v))?v:"";
+      var val;
+      if(isCategoryMode){
+        var av=activeSegmentValue(pl.id);
+        val=av.has?av.val:"";
+      } else {
+        var v=segs.current[pl.id];
+        val=(typeof v==="number"&&!isNaN(v))?v:"";
+      }
       var input=row.querySelector('.scoreinput[data-p="'+pl.id+'"]');
       if(input&&document.activeElement!==input)input.value=val;
     });
@@ -1841,8 +1984,8 @@
       var displayTotal=total+offset;
       var mini=c.querySelector(".mini-total-val");if(mini)mini.textContent=displayTotal;
       var miniEl=c.querySelector(".mini-total");if(miniEl)miniEl.style.display=state.showTotal?"":"none";
-      var entered=isRounds&&Object.prototype.hasOwnProperty.call(segs.current,pl.id);
-      c.querySelector(".tnum").textContent=isRounds?(segs.current[pl.id]||0):displayTotal;
+      var entered=isRounds&&pendingHas(pl.id);
+      c.querySelector(".tnum").textContent=isRounds?pendingScoreFor(pl.id):displayTotal;
       c.classList.toggle("rnd-entered",entered);
       c.classList.toggle("rnd-pending",isRounds&&!entered);
       var isLeader=hasActivity&&rankById[pl.id]===1;
@@ -1871,9 +2014,19 @@
 
   document.getElementById("addround").addEventListener("click",function(){
     if(!state.players.length){alert("Add at least one player first.");return;}
-    if(!Object.keys(buildSegments().current).length){alert("Enter at least one player's score before adding the round.");return;}
     pendingRestore=null;
-    state.rounds.push({id:uid(),marker:true});
+    if(CATEGORY_LABELS[state.modeId]){
+      var segsCat=buildSegments();
+      var newCat={id:uid(),marker:true,category:roundLabel(segsCat.completed.length)};
+      state.rounds.push(newCat);
+      state.activeMarkerId=newCat.id;
+      save();renderAll();
+      return;
+    }
+    var segsNow=buildSegments();
+    if(!Object.keys(segsNow.current).length){alert("Enter at least one player's score before adding the round.");return;}
+    var newMarker={id:uid(),marker:true};
+    state.rounds.push(newMarker);
     save();renderAll();
   });
 
@@ -1898,7 +2051,7 @@
     html+='</ul><div class="banner-btns"><button class="bbtn primary" id="b-share">Share results</button><button class="bbtn full" id="b-save">Save as image</button><button class="bbtn" id="b-new">New game</button><button class="bbtn" id="b-close">Close</button></div>';
     bannerEl.innerHTML=html;
     document.getElementById("b-close").addEventListener("click",function(){overlay.hidden=true;stopConfetti();});
-    document.getElementById("b-new").addEventListener("click",function(){state.rounds=[];save();renderAll();overlay.hidden=true;stopConfetti();});
+    document.getElementById("b-new").addEventListener("click",function(){state.rounds=[];state.activeMarkerId=null;seedCategories(state.modeId);save();renderAll();overlay.hidden=true;stopConfetti();});
     document.getElementById("b-save").addEventListener("click",saveImage);
     document.getElementById("b-share").addEventListener("click",shareImage);
     overlay.hidden=false;
