@@ -672,3 +672,25 @@ may consider it more useful to permit linking proprietary applications with
 the library.  If this is what you want to do, use the GNU Lesser General
 Public License instead of this License.  But first, please read
 <https://www.gnu.org/licenses/why-not-lgpl.html>.
+
+                    ADDITIONAL TERMS
+
+  In accordance with Section 7 of the GNU General Public License, version 3
+("GPLv3"), the copyright holder of this program, Scorepad ("the Program"),
+adds the following additional term, which applies to the Program and to any
+work based on the Program as defined in GPLv3:
+
+  Pursuant to GPLv3 Section 7(b), you must preserve reasonable legal notices
+and author attributions. Specifically: any copy, modification, fork, or
+redistribution of the Program -- including a version deployed as a hosted
+web service -- must retain clear and visible credit to "Scorepad.uk" and
+its original author, "FaelynAegolor," in any location where such credit
+would customarily appear (for example: an "About" section, a settings or
+info panel, a project README, or a visible footer/credits area of a
+deployed instance). This credit must not be removed, obscured, or replaced
+with a claim of sole or original authorship by any other party.
+
+  This additional term is severable from, and does not otherwise modify or
+supersede, the terms of the GNU General Public License version 3 above. If
+this additional term is held unenforceable for any reason, the remainder of
+this License continues to apply in full.
