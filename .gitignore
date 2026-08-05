@@ -1,0 +1,10 @@
+# macOS AppleDouble sidecar files -- this project's working copy lives on a FAT32-formatted
+# drive, which doesn't support macOS extended attributes/resource forks, so macOS falls back to
+# writing a separate "._<filename>" file alongside almost everything as it's touched. Harmless on
+# their own, but they're not part of the project and one variant of them has previously corrupted
+# this repo's git pack index -- never let them get staged.
+._*
+.DS_Store
+
+# Claude Code local settings
+.claude/
