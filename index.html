@@ -456,6 +456,9 @@
   .share-code-text{font-family:var(--font-mono);font-weight:700;font-size:18px;letter-spacing:3px;color:var(--text)}
   .share-copy-btn{flex:none;background:transparent;border:1px solid var(--line);color:var(--text);border-radius:9px;font:inherit;font-weight:700;font-size:12px;padding:8px 12px;cursor:pointer;transition:.15s}
   .share-copy-btn:hover{border-color:var(--accent);color:var(--accent)}
+  .share-qr{width:168px;max-width:60%;margin:4px auto 14px;padding:10px;background:#fff;border-radius:12px;box-shadow:0 6px 18px -8px rgba(0,0,0,.4)}
+  .share-qr svg{display:block;width:100%;height:auto}
+  .share-qr-lab{text-align:center;font-size:11px;color:var(--muted);margin:-6px 0 12px}
 
   footer{text-align:center;color:var(--muted);opacity:.7;font-size:11px;margin-top:26px;line-height:1.6}
   .warn{color:var(--gold);opacity:1;display:none;margin-bottom:6px}
@@ -621,6 +624,10 @@
           <div class="menu-sec" style="margin-top:0;padding-top:0;border-top:none">
             <div id="score-mode-list"></div>
             <div class="score-toggle-row">
+              <div class="score-toggle-label"><b>Lowest score wins</b><small>For games like Hearts or Golf — fewest points ranks 1st. Ignored in Life-total games, which already rank by who lasts longest.</small></div>
+              <button class="ios-toggle" id="lowestwins-toggle" aria-pressed="false" aria-label="Toggle lowest score wins"><span class="ios-toggle-dot"></span></button>
+            </div>
+            <div class="score-toggle-row">
               <div class="score-toggle-label"><b>Show rank badge</b><small>1st/2nd/3rd medal on each tile</small></div>
               <button class="ios-toggle" id="rank-toggle" aria-pressed="true" aria-label="Toggle rank badge display"><span class="ios-toggle-dot"></span></button>
             </div>
@@ -657,6 +664,8 @@
             <div class="share-when-on" hidden>
               <div class="share-status-row"><span class="share-status-dot" aria-hidden="true"></span><span class="share-status-text">Connecting…</span></div>
               <p class="menu-note" style="margin:6px 0 10px">Code: <b class="share-code-text" style="color:var(--text);letter-spacing:2px">——————</b></p>
+              <div class="share-qr" id="share-qr"></div>
+              <p class="share-qr-lab">Scan to join instantly</p>
               <button class="menu-new menu-reset" id="share-leave-btn">Leave shared game</button>
             </div>
           </div>
@@ -808,6 +817,14 @@
   </div>
 </div>
 
+<!--
+  QR Code Generator for JavaScript, minified, embedded inline so the "Play together" share code
+  can be turned into a scannable QR with no runtime dependency on a third-party CDN staying up.
+  Copyright (c) 2009 Kazuhiko Arase, MIT licensed: http://www.opensource.org/licenses/mit-license.php
+  Source: https://github.com/kazuhikoarase/qrcode-generator
+-->
+<script>var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],f={},c=function(t,r){o=function(t){for(var r=new Array(t),e=0;e<t;e+=1){r[e]=new Array(t);for(var n=0;n<t;n+=1)r[e][n]=null}return r}(i=4*e+17),l(0,0),l(i-7,0),l(0,i-7),s(),h(),d(t,r),e>=7&&v(t),null==a&&(a=p(e,n,u)),w(a,r)},l=function(t,r){for(var e=-1;e<=7;e+=1)if(!(t+e<=-1||i<=t+e))for(var n=-1;n<=7;n+=1)r+n<=-1||i<=r+n||(o[t+e][r+n]=0<=e&&e<=6&&(0==n||6==n)||0<=n&&n<=6&&(0==e||6==e)||2<=e&&e<=4&&2<=n&&n<=4)},h=function(){for(var t=8;t<i-8;t+=1)null==o[t][6]&&(o[t][6]=t%2==0);for(var r=8;r<i-8;r+=1)null==o[6][r]&&(o[6][r]=r%2==0)},s=function(){for(var t=B.getPatternPosition(e),r=0;r<t.length;r+=1)for(var n=0;n<t.length;n+=1){var i=t[r],a=t[n];if(null==o[i][a])for(var u=-2;u<=2;u+=1)for(var f=-2;f<=2;f+=1)o[i+u][a+f]=-2==u||2==u||-2==f||2==f||0==u&&0==f}},v=function(t){for(var r=B.getBCHTypeNumber(e),n=0;n<18;n+=1){var a=!t&&1==(r>>n&1);o[Math.floor(n/3)][n%3+i-8-3]=a}for(n=0;n<18;n+=1){a=!t&&1==(r>>n&1);o[n%3+i-8-3][Math.floor(n/3)]=a}},d=function(t,r){for(var e=n<<3|r,a=B.getBCHTypeInfo(e),u=0;u<15;u+=1){var f=!t&&1==(a>>u&1);u<6?o[u][8]=f:u<8?o[u+1][8]=f:o[i-15+u][8]=f}for(u=0;u<15;u+=1){f=!t&&1==(a>>u&1);u<8?o[8][i-u-1]=f:u<9?o[8][15-u-1+1]=f:o[8][15-u-1]=f}o[i-8][8]=!t},w=function(t,r){for(var e=-1,n=i-1,a=7,u=0,f=B.getMaskFunction(r),c=i-1;c>0;c-=2)for(6==c&&(c-=1);;){for(var g=0;g<2;g+=1)if(null==o[n][c-g]){var l=!1;u<t.length&&(l=1==(t[u]>>>a&1)),f(n,c-g)&&(l=!l),o[n][c-g]=l,-1==(a-=1)&&(u+=1,a=7)}if((n+=e)<0||i<=n){n-=e,e=-e;break}}},p=function(t,r,e){for(var n=A.getRSBlocks(t,r),o=b(),i=0;i<e.length;i+=1){var a=e[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var u=0;for(i=0;i<n.length;i+=1)u+=n[i].dataCount;if(o.getLengthInBits()>8*u)throw"code length overflow. ("+o.getLengthInBits()+">"+8*u+")";for(o.getLengthInBits()+4<=8*u&&o.put(0,4);o.getLengthInBits()%8!=0;)o.putBit(!1);for(;!(o.getLengthInBits()>=8*u||(o.put(236,8),o.getLengthInBits()>=8*u));)o.put(17,8);return function(t,r){for(var e=0,n=0,o=0,i=new Array(r.length),a=new Array(r.length),u=0;u<r.length;u+=1){var f=r[u].dataCount,c=r[u].totalCount-f;n=Math.max(n,f),o=Math.max(o,c),i[u]=new Array(f);for(var g=0;g<i[u].length;g+=1)i[u][g]=255&t.getBuffer()[g+e];e+=f;var l=B.getErrorCorrectPolynomial(c),h=k(i[u],l.getLength()-1).mod(l);for(a[u]=new Array(l.getLength()-1),g=0;g<a[u].length;g+=1){var s=g+h.getLength()-a[u].length;a[u][g]=s>=0?h.getAt(s):0}}var v=0;for(g=0;g<r.length;g+=1)v+=r[g].totalCount;var d=new Array(v),w=0;for(g=0;g<n;g+=1)for(u=0;u<r.length;u+=1)g<i[u].length&&(d[w]=i[u][g],w+=1);for(g=0;g<o;g+=1)for(u=0;u<r.length;u+=1)g<a[u].length&&(d[w]=a[u][g],w+=1);return d}(o,n)};f.addData=function(t,r){var e=null;switch(r=r||"Byte"){case"Numeric":e=M(t);break;case"Alphanumeric":e=x(t);break;case"Byte":e=m(t);break;case"Kanji":e=L(t);break;default:throw"mode:"+r}u.push(e),a=null},f.isDark=function(t,r){if(t<0||i<=t||r<0||i<=r)throw t+","+r;return o[t][r]},f.getModuleCount=function(){return i},f.make=function(){if(e<1){for(var t=1;t<40;t++){for(var r=A.getRSBlocks(t,n),o=b(),i=0;i<u.length;i++){var a=u[i];o.put(a.getMode(),4),o.put(a.getLength(),B.getLengthInBits(a.getMode(),t)),a.write(o)}var g=0;for(i=0;i<r.length;i++)g+=r[i].dataCount;if(o.getLengthInBits()<=8*g)break}e=t}c(!1,function(){for(var t=0,r=0,e=0;e<8;e+=1){c(!0,e);var n=B.getLostPoint(f);(0==e||t>n)&&(t=n,r=e)}return r}())},f.createTableTag=function(t,r){t=t||2;var e="";e+='<table style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: "+(r=void 0===r?4*t:r)+"px;",e+='">',e+="<tbody>";for(var n=0;n<f.getModuleCount();n+=1){e+="<tr>";for(var o=0;o<f.getModuleCount();o+=1)e+='<td style="',e+=" border-width: 0px; border-style: none;",e+=" border-collapse: collapse;",e+=" padding: 0px; margin: 0px;",e+=" width: "+t+"px;",e+=" height: "+t+"px;",e+=" background-color: ",e+=f.isDark(n,o)?"#000000":"#ffffff",e+=";",e+='"/>';e+="</tr>"}return e+="</tbody>",e+="</table>"},f.createSvgTag=function(t,r,e,n){var o={};"object"==typeof arguments[0]&&(t=(o=arguments[0]).cellSize,r=o.margin,e=o.alt,n=o.title),t=t||2,r=void 0===r?4*t:r,(e="string"==typeof e?{text:e}:e||{}).text=e.text||null,e.id=e.text?e.id||"qrcode-description":null,(n="string"==typeof n?{text:n}:n||{}).text=n.text||null,n.id=n.text?n.id||"qrcode-title":null;var i,a,u,c,g=f.getModuleCount()*t+2*r,l="";for(c="l"+t+",0 0,"+t+" -"+t+",0 0,-"+t+"z ",l+='<svg version="1.1" xmlns="http://www.w3.org/2000/svg"',l+=o.scalable?"":' width="'+g+'px" height="'+g+'px"',l+=' viewBox="0 0 '+g+" "+g+'" ',l+=' preserveAspectRatio="xMinYMin meet"',l+=n.text||e.text?' role="img" aria-labelledby="'+y([n.id,e.id].join(" ").trim())+'"':"",l+=">",l+=n.text?'<title id="'+y(n.id)+'">'+y(n.text)+"</title>":"",l+=e.text?'<description id="'+y(e.id)+'">'+y(e.text)+"</description>":"",l+='<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>',l+='<path d="',a=0;a<f.getModuleCount();a+=1)for(u=a*t+r,i=0;i<f.getModuleCount();i+=1)f.isDark(a,i)&&(l+="M"+(i*t+r)+","+u+c);return l+='" stroke="transparent" fill="black"/>',l+="</svg>"},f.createDataURL=function(t,r){t=t||2,r=void 0===r?4*t:r;var e=f.getModuleCount()*t+2*r,n=r,o=e-r;return I(e,e,function(r,e){if(n<=r&&r<o&&n<=e&&e<o){var i=Math.floor((r-n)/t),a=Math.floor((e-n)/t);return f.isDark(a,i)?0:1}return 1})},f.createImgTag=function(t,r,e){t=t||2,r=void 0===r?4*t:r;var n=f.getModuleCount()*t+2*r,o="";return o+="<img",o+=' src="',o+=f.createDataURL(t,r),o+='"',o+=' width="',o+=n,o+='"',o+=' height="',o+=n,o+='"',e&&(o+=' alt="',o+=y(e),o+='"'),o+="/>"};var y=function(t){for(var r="",e=0;e<t.length;e+=1){var n=t.charAt(e);switch(n){case"<":r+="&lt;";break;case">":r+="&gt;";break;case"&":r+="&amp;";break;case'"':r+="&quot;";break;default:r+=n}}return r};return f.createASCII=function(t,r){if((t=t||1)<2)return function(t){t=void 0===t?2:t;var r,e,n,o,i,a=1*f.getModuleCount()+2*t,u=t,c=a-t,g={"██":"█","█ ":"▀"," █":"▄","  ":" "},l={"██":"▀","█ ":"▀"," █":" ","  ":" "},h="";for(r=0;r<a;r+=2){for(n=Math.floor((r-u)/1),o=Math.floor((r+1-u)/1),e=0;e<a;e+=1)i="█",u<=e&&e<c&&u<=r&&r<c&&f.isDark(n,Math.floor((e-u)/1))&&(i=" "),u<=e&&e<c&&u<=r+1&&r+1<c&&f.isDark(o,Math.floor((e-u)/1))?i+=" ":i+="█",h+=t<1&&r+1>=c?l[i]:g[i];h+="\n"}return a%2&&t>0?h.substring(0,h.length-a-1)+Array(a+1).join("▀"):h.substring(0,h.length-1)}(r);t-=1,r=void 0===r?2*t:r;var e,n,o,i,a=f.getModuleCount()*t+2*r,u=r,c=a-r,g=Array(t+1).join("██"),l=Array(t+1).join("  "),h="",s="";for(e=0;e<a;e+=1){for(o=Math.floor((e-u)/t),s="",n=0;n<a;n+=1)i=1,u<=n&&n<c&&u<=e&&e<c&&f.isDark(o,Math.floor((n-u)/t))&&(i=0),s+=i?g:l;for(o=0;o<t;o+=1)h+=s+"\n"}return h.substring(0,h.length-1)},f.renderTo2dContext=function(t,r){r=r||2;for(var e=f.getModuleCount(),n=0;n<e;n++)for(var o=0;o<e;o++)t.fillStyle=f.isDark(n,o)?"black":"white",t.fillRect(o*r,n*r,r,r)},f};t.stringToBytes=(t.stringToBytesFuncs={default:function(t){for(var r=[],e=0;e<t.length;e+=1){var n=t.charCodeAt(e);r.push(255&n)}return r}}).default,t.createStringToBytes=function(t,r){var e=function(){for(var e=S(t),n=function(){var t=e.read();if(-1==t)throw"eof";return t},o=0,i={};;){var a=e.read();if(-1==a)break;var u=n(),f=n()<<8|n();i[String.fromCharCode(a<<8|u)]=f,o+=1}if(o!=r)throw o+" != "+r;return i}(),n="?".charCodeAt(0);return function(t){for(var r=[],o=0;o<t.length;o+=1){var i=t.charCodeAt(o);if(i<128)r.push(i);else{var a=e[t.charAt(o)];"number"==typeof a?(255&a)==a?r.push(a):(r.push(a>>>8),r.push(255&a)):r.push(n)}}return r}};var r,e,n,o,i,a=1,u=2,f=4,c=8,g={L:1,M:0,Q:3,H:2},l=0,h=1,s=2,v=3,d=4,w=5,p=6,y=7,B=(r=[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]],e=1335,n=7973,i=function(t){for(var r=0;0!=t;)r+=1,t>>>=1;return r},(o={}).getBCHTypeInfo=function(t){for(var r=t<<10;i(r)-i(e)>=0;)r^=e<<i(r)-i(e);return 21522^(t<<10|r)},o.getBCHTypeNumber=function(t){for(var r=t<<12;i(r)-i(n)>=0;)r^=n<<i(r)-i(n);return t<<12|r},o.getPatternPosition=function(t){return r[t-1]},o.getMaskFunction=function(t){switch(t){case l:return function(t,r){return(t+r)%2==0};case h:return function(t,r){return t%2==0};case s:return function(t,r){return r%3==0};case v:return function(t,r){return(t+r)%3==0};case d:return function(t,r){return(Math.floor(t/2)+Math.floor(r/3))%2==0};case w:return function(t,r){return t*r%2+t*r%3==0};case p:return function(t,r){return(t*r%2+t*r%3)%2==0};case y:return function(t,r){return(t*r%3+(t+r)%2)%2==0};default:throw"bad maskPattern:"+t}},o.getErrorCorrectPolynomial=function(t){for(var r=k([1],0),e=0;e<t;e+=1)r=r.multiply(k([1,C.gexp(e)],0));return r},o.getLengthInBits=function(t,r){if(1<=r&&r<10)switch(t){case a:return 10;case u:return 9;case f:case c:return 8;default:throw"mode:"+t}else if(r<27)switch(t){case a:return 12;case u:return 11;case f:return 16;case c:return 10;default:throw"mode:"+t}else{if(!(r<41))throw"type:"+r;switch(t){case a:return 14;case u:return 13;case f:return 16;case c:return 12;default:throw"mode:"+t}}},o.getLostPoint=function(t){for(var r=t.getModuleCount(),e=0,n=0;n<r;n+=1)for(var o=0;o<r;o+=1){for(var i=0,a=t.isDark(n,o),u=-1;u<=1;u+=1)if(!(n+u<0||r<=n+u))for(var f=-1;f<=1;f+=1)o+f<0||r<=o+f||0==u&&0==f||a==t.isDark(n+u,o+f)&&(i+=1);i>5&&(e+=3+i-5)}for(n=0;n<r-1;n+=1)for(o=0;o<r-1;o+=1){var c=0;t.isDark(n,o)&&(c+=1),t.isDark(n+1,o)&&(c+=1),t.isDark(n,o+1)&&(c+=1),t.isDark(n+1,o+1)&&(c+=1),0!=c&&4!=c||(e+=3)}for(n=0;n<r;n+=1)for(o=0;o<r-6;o+=1)t.isDark(n,o)&&!t.isDark(n,o+1)&&t.isDark(n,o+2)&&t.isDark(n,o+3)&&t.isDark(n,o+4)&&!t.isDark(n,o+5)&&t.isDark(n,o+6)&&(e+=40);for(o=0;o<r;o+=1)for(n=0;n<r-6;n+=1)t.isDark(n,o)&&!t.isDark(n+1,o)&&t.isDark(n+2,o)&&t.isDark(n+3,o)&&t.isDark(n+4,o)&&!t.isDark(n+5,o)&&t.isDark(n+6,o)&&(e+=40);var g=0;for(o=0;o<r;o+=1)for(n=0;n<r;n+=1)t.isDark(n,o)&&(g+=1);return e+=Math.abs(100*g/r/r-50)/5*10},o),C=function(){for(var t=new Array(256),r=new Array(256),e=0;e<8;e+=1)t[e]=1<<e;for(e=8;e<256;e+=1)t[e]=t[e-4]^t[e-5]^t[e-6]^t[e-8];for(e=0;e<255;e+=1)r[t[e]]=e;var n={glog:function(t){if(t<1)throw"glog("+t+")";return r[t]},gexp:function(r){for(;r<0;)r+=255;for(;r>=256;)r-=255;return t[r]}};return n}();function k(t,r){if(void 0===t.length)throw t.length+"/"+r;var e=function(){for(var e=0;e<t.length&&0==t[e];)e+=1;for(var n=new Array(t.length-e+r),o=0;o<t.length-e;o+=1)n[o]=t[o+e];return n}(),n={getAt:function(t){return e[t]},getLength:function(){return e.length},multiply:function(t){for(var r=new Array(n.getLength()+t.getLength()-1),e=0;e<n.getLength();e+=1)for(var o=0;o<t.getLength();o+=1)r[e+o]^=C.gexp(C.glog(n.getAt(e))+C.glog(t.getAt(o)));return k(r,0)},mod:function(t){if(n.getLength()-t.getLength()<0)return n;for(var r=C.glog(n.getAt(0))-C.glog(t.getAt(0)),e=new Array(n.getLength()),o=0;o<n.getLength();o+=1)e[o]=n.getAt(o);for(o=0;o<t.getLength();o+=1)e[o]^=C.gexp(C.glog(t.getAt(o))+r);return k(e,0).mod(t)}};return n}var A=function(){var t=[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9],[1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],[2,86,68],[4,43,27],[4,43,19],[4,43,15],[2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],[2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],[2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],[2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],[4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],[2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],[4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],[3,145,115,1,146,116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],[5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12,7,37,13],[5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],[1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],[5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],[3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],[3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,43,15,10,44,16],[4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],[2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],[4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],[6,147,117,4,148,118],[6,73,45,14,74,46],[11,54,24,16,55,25],[30,46,16,2,47,17],[8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16],[10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17],[8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16],[3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16],[7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16],[5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16],[13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16],[17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16],[17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,55,25],[11,45,15,46,46,16],[13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17],[12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16],[6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16],[17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16],[4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16],[20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16],[19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]],r=function(t,r){var e={};return e.totalCount=t,e.dataCount=r,e},e={};return e.getRSBlocks=function(e,n){var o=function(r,e){switch(e){case g.L:return t[4*(r-1)+0];case g.M:return t[4*(r-1)+1];case g.Q:return t[4*(r-1)+2];case g.H:return t[4*(r-1)+3];default:return}}(e,n);if(void 0===o)throw"bad rs block @ typeNumber:"+e+"/errorCorrectionLevel:"+n;for(var i=o.length/3,a=[],u=0;u<i;u+=1)for(var f=o[3*u+0],c=o[3*u+1],l=o[3*u+2],h=0;h<f;h+=1)a.push(r(c,l));return a},e}(),b=function(){var t=[],r=0,e={getBuffer:function(){return t},getAt:function(r){var e=Math.floor(r/8);return 1==(t[e]>>>7-r%8&1)},put:function(t,r){for(var n=0;n<r;n+=1)e.putBit(1==(t>>>r-n-1&1))},getLengthInBits:function(){return r},putBit:function(e){var n=Math.floor(r/8);t.length<=n&&t.push(0),e&&(t[n]|=128>>>r%8),r+=1}};return e},M=function(t){var r=a,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+2<r.length;)t.put(o(r.substring(n,n+3)),10),n+=3;n<r.length&&(r.length-n==1?t.put(o(r.substring(n,n+1)),4):r.length-n==2&&t.put(o(r.substring(n,n+2)),7))}},o=function(t){for(var r=0,e=0;e<t.length;e+=1)r=10*r+i(t.charAt(e));return r},i=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);throw"illegal char :"+t};return n},x=function(t){var r=u,e=t,n={getMode:function(){return r},getLength:function(t){return e.length},write:function(t){for(var r=e,n=0;n+1<r.length;)t.put(45*o(r.charAt(n))+o(r.charAt(n+1)),11),n+=2;n<r.length&&t.put(o(r.charAt(n)),6)}},o=function(t){if("0"<=t&&t<="9")return t.charCodeAt(0)-"0".charCodeAt(0);if("A"<=t&&t<="Z")return t.charCodeAt(0)-"A".charCodeAt(0)+10;switch(t){case" ":return 36;case"$":return 37;case"%":return 38;case"*":return 39;case"+":return 40;case"-":return 41;case".":return 42;case"/":return 43;case":":return 44;default:throw"illegal char :"+t}};return n},m=function(r){var e=f,n=t.stringToBytes(r),o={getMode:function(){return e},getLength:function(t){return n.length},write:function(t){for(var r=0;r<n.length;r+=1)t.put(n[r],8)}};return o},L=function(r){var e=c,n=t.stringToBytesFuncs.SJIS;if(!n)throw"sjis not supported.";!function(){var t=n("友");if(2!=t.length||38726!=(t[0]<<8|t[1]))throw"sjis not supported."}();var o=n(r),i={getMode:function(){return e},getLength:function(t){return~~(o.length/2)},write:function(t){for(var r=o,e=0;e+1<r.length;){var n=(255&r[e])<<8|255&r[e+1];if(33088<=n&&n<=40956)n-=33088;else{if(!(57408<=n&&n<=60351))throw"illegal char at "+(e+1)+"/"+n;n-=49472}n=192*(n>>>8&255)+(255&n),t.put(n,13),e+=2}if(e<r.length)throw"illegal char at "+(e+1)}};return i},D=function(){var t=[],r={writeByte:function(r){t.push(255&r)},writeShort:function(t){r.writeByte(t),r.writeByte(t>>>8)},writeBytes:function(t,e,n){e=e||0,n=n||t.length;for(var o=0;o<n;o+=1)r.writeByte(t[o+e])},writeString:function(t){for(var e=0;e<t.length;e+=1)r.writeByte(t.charCodeAt(e))},toByteArray:function(){return t},toString:function(){var r="";r+="[";for(var e=0;e<t.length;e+=1)e>0&&(r+=","),r+=t[e];return r+="]"}};return r},S=function(t){var r=t,e=0,n=0,o=0,i={read:function(){for(;o<8;){if(e>=r.length){if(0==o)return-1;throw"unexpected end of file./"+o}var t=r.charAt(e);if(e+=1,"="==t)return o=0,-1;t.match(/^\s$/)||(n=n<<6|a(t.charCodeAt(0)),o+=6)}var i=n>>>o-8&255;return o-=8,i}},a=function(t){if(65<=t&&t<=90)return t-65;if(97<=t&&t<=122)return t-97+26;if(48<=t&&t<=57)return t-48+52;if(43==t)return 62;if(47==t)return 63;throw"c:"+t};return i},I=function(t,r,e){for(var n=function(t,r){var e=t,n=r,o=new Array(t*r),i={setPixel:function(t,r,n){o[r*e+t]=n},write:function(t){t.writeString("GIF87a"),t.writeShort(e),t.writeShort(n),t.writeByte(128),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(0),t.writeByte(255),t.writeByte(255),t.writeByte(255),t.writeString(","),t.writeShort(0),t.writeShort(0),t.writeShort(e),t.writeShort(n),t.writeByte(0);var r=a(2);t.writeByte(2);for(var o=0;r.length-o>255;)t.writeByte(255),t.writeBytes(r,o,255),o+=255;t.writeByte(r.length-o),t.writeBytes(r,o,r.length-o),t.writeByte(0),t.writeString(";")}},a=function(t){for(var r=1<<t,e=1+(1<<t),n=t+1,i=u(),a=0;a<r;a+=1)i.add(String.fromCharCode(a));i.add(String.fromCharCode(r)),i.add(String.fromCharCode(e));var f,c,g,l=D(),h=(f=l,c=0,g=0,{write:function(t,r){if(t>>>r!=0)throw"length over";for(;c+r>=8;)f.writeByte(255&(t<<c|g)),r-=8-c,t>>>=8-c,g=0,c=0;g|=t<<c,c+=r},flush:function(){c>0&&f.writeByte(g)}});h.write(r,n);var s=0,v=String.fromCharCode(o[s]);for(s+=1;s<o.length;){var d=String.fromCharCode(o[s]);s+=1,i.contains(v+d)?v+=d:(h.write(i.indexOf(v),n),i.size()<4095&&(i.size()==1<<n&&(n+=1),i.add(v+d)),v=d)}return h.write(i.indexOf(v),n),h.write(e,n),h.flush(),l.toByteArray()},u=function(){var t={},r=0,e={add:function(n){if(e.contains(n))throw"dup key:"+n;t[n]=r,r+=1},size:function(){return r},indexOf:function(r){return t[r]},contains:function(r){return void 0!==t[r]}};return e};return i}(t,r),o=0;o<r;o+=1)for(var i=0;i<t;i+=1)n.setPixel(i,o,e(i,o));var a=D();n.write(a);for(var u=function(){var t=0,r=0,e=0,n="",o={},i=function(t){n+=String.fromCharCode(a(63&t))},a=function(t){if(t<0);else{if(t<26)return 65+t;if(t<52)return t-26+97;if(t<62)return t-52+48;if(62==t)return 43;if(63==t)return 47}throw"n:"+t};return o.writeByte=function(n){for(t=t<<8|255&n,r+=8,e+=1;r>=6;)i(t>>>r-6),r-=6},o.flush=function(){if(r>0&&(i(t<<6-r),t=0,r=0),e%3!=0)for(var o=3-e%3,a=0;a<o;a+=1)n+="="},o.toString=function(){return n},o}(),f=a.toByteArray(),c=0;c<f.length;c+=1)u.writeByte(f[c]);return u.flush(),"data:image/gif;base64,"+u};return t}();qrcode.stringToBytesFuncs["UTF-8"]=function(t){return function(t){for(var r=[],e=0;e<t.length;e++){var n=t.charCodeAt(e);n<128?r.push(n):n<2048?r.push(192|n>>6,128|63&n):n<55296||n>=57344?r.push(224|n>>12,128|n>>6&63,128|63&n):(e++,n=65536+((1023&n)<<10|1023&t.charCodeAt(e)),r.push(240|n>>18,128|n>>12&63,128|n>>6&63,128|63&n))}return r}(t)},function(t){"function"==typeof define&&define.amd?define([],t):"object"==typeof exports&&(module.exports=t())}(function(){return qrcode});</script>
+
 <script>
 (function(){
   "use strict";
@@ -848,7 +865,8 @@
     starrealms:{label:"Star Realms",name:"Star Realms",target:"50",note:"Starts at 50 Authority, counts down",keypad:"starrealms",countdown:true},
     yugioh:{label:"Yu-Gi-Oh!",name:"Yu-Gi-Oh!",target:"8000",note:"Starts at 8000 LP, counts down",keypad:"yugioh",countdown:true},
     wingspan:{label:"Wingspan",name:"Wingspan",target:"",note:"Table view — each row is a scoring category, not a round",keypad:"standard",rounds:true},
-    wyrmspan:{label:"Wyrmspan",name:"Wyrmspan",target:"",note:"Table view — each row is a scoring category, not a round",keypad:"standard",rounds:true}
+    wyrmspan:{label:"Wyrmspan",name:"Wyrmspan",target:"",note:"Table view — each row is a scoring category, not a round",keypad:"standard",rounds:true},
+    yahtzee:{label:"Yahtzee",name:"Yahtzee",target:"",note:"Table view — each row is a scoring category, not a round",keypad:"standard",rounds:true}
   };
   // Wingspan/Wyrmspan don't really have "rounds" the way Sushi Go or a card game does -- final
   // scoring is a fixed list of categories (bird points, eggs, bonus card, ...) added up once at
@@ -857,7 +875,8 @@
   // just type each category's subtotal into their column, same table UI, same Total row.
   var CATEGORY_LABELS={
     wingspan:["Bird points","Bonus card","Round 1 goal","Round 2 goal","Round 3 goal","Round 4 goal","Eggs","Cached food","Tucked cards"],
-    wyrmspan:["Dragon points","Dragon Guild","Eggs","Cached resources","Tucked cards","Public objectives","Remaining items"]
+    wyrmspan:["Dragon points","Dragon Guild","Eggs","Cached resources","Tucked cards","Public objectives","Remaining items"],
+    yahtzee:["Ones","Twos","Threes","Fours","Fives","Sixes","Upper Bonus (63+ = 35)","Three of a Kind","Four of a Kind","Full House","Small Straight","Large Straight","Yahtzee","Chance"]
   };
   function roundLabel(idx){
     var cats=CATEGORY_LABELS[state.modeId];
@@ -875,6 +894,33 @@
 
   function mk(name){return{id:uid(),name:name,color:null};}
   function uid(){return Math.random().toString(36).slice(2,9);}
+  // Every round entry (marker or score) carries an explicit numeric `order`, synced to Firebase
+  // alongside it (see roundToCloudValue/cloudValueToRound) so applyCloudSnapshot can reconstruct
+  // the ledger's exact order after a round-trip instead of relying on Firebase's own per-child
+  // keys, which are chronologically sortable but ONLY reflect when each entry was WRITTEN, not
+  // where it's meant to sit. That distinction doesn't matter for entries that are simply appended
+  // (state.rounds.push -- covers every entry creation site except one) since creation order
+  // already matches intended order there. It matters a lot for setSegmentValue(), which edits a
+  // PAST round/category by splicing a brand-new entry in BEFORE an existing (often much older)
+  // marker: a freshly-minted Firebase key is always chronologically the newest of the lot
+  // regardless of where the entry is meant to go, so key-only sorting would shove that edit to
+  // the very end of the reconstructed ledger -- past every marker -- leaving it permanently
+  // outside any segment (buildSegments() folds it into the ledger's open/current tail instead,
+  // which category-table mode never displays, so the points just silently vanish). This bug
+  // doesn't need two devices to trigger: syncing echoes YOUR OWN edit back to you the same way.
+  var lastRoundOrder=0;
+  function nextRoundOrder(){
+    var now=Date.now();
+    lastRoundOrder=now>lastRoundOrder?now:lastRoundOrder+1;
+    return lastRoundOrder;
+  }
+  function orderBefore(markerOrder){
+    // Splits the gap before an existing entry's order value so the new entry sorts immediately
+    // ahead of it regardless of creation time. Falls back to a fresh monotonic value if the
+    // target has no order yet (older saves/entries that predate this field).
+    if(typeof markerOrder!=="number")return nextRoundOrder();
+    return markerOrder-0.5;
+  }
   function ensureShape(s){
     s.gameName=s.gameName||"";s.players=s.players||[];s.rounds=s.rounds||[];
     delete s.pending;
@@ -886,6 +932,7 @@
     delete s.showRankTotal;
     if(typeof s.showProgress!=="boolean")s.showProgress=true;
     if(typeof s.showAdjustBtns!=="boolean")s.showAdjustBtns=true;
+    if(typeof s.lowestWins!=="boolean")s.lowestWins=false;
     if(typeof s.countdown!=="boolean")s.countdown=false;
     if(typeof s.gameNameCustom!=="boolean")s.gameNameCustom=false;
     if(typeof s.gameMode!=="boolean")s.gameMode=false;
@@ -907,6 +954,21 @@
   }
 
   function totalFor(pid){var t=0;for(var i=0;i<state.rounds.length;i++){var e=state.rounds[i];if(e.marker)continue;var v=e.scores[pid];if(typeof v==="number"&&!isNaN(v))t+=v;}return t;}
+  // Every player's total in one pass over state.rounds, for standings() -- calling totalFor()
+  // once per player would rescan the whole ledger N times. totalFor() itself stays a standalone
+  // single-player scan for its other callers (keypad code), where only one player's total is
+  // ever needed and a full per-player accumulation would be wasted work.
+  function totalsById(){
+    var totals={};
+    state.rounds.forEach(function(e){
+      if(e.marker)return;
+      Object.keys(e.scores).forEach(function(pid){
+        var v=e.scores[pid];
+        if(typeof v==="number"&&!isNaN(v))totals[pid]=(totals[pid]||0)+v;
+      });
+    });
+    return totals;
+  }
   // state.rounds is a flat chronological ledger of scoring entries {id,scores:{pid:delta}}
   // interleaved with round markers {id,marker:true}. A "round" (for round-by-round display)
   // is just the sum of entries between two markers — this lets running-score taps and
@@ -924,9 +986,15 @@
     });
     return{completed:completed,current:cur};
   }
-  // Chronological ledger index at which each player's life first hits the elimination
-  // threshold (raw total + lifeOffset() <= 0). Used to rank Life Mode games by survival
-  // order -- final remaining life doesn't matter, only how long you lasted.
+  // Chronological ledger index at which each CURRENTLY-eliminated player most recently hit the
+  // elimination threshold (raw total + lifeOffset() <= 0). Used to rank Life Mode games by
+  // survival order -- final remaining life doesn't matter, only how long you lasted. A player
+  // is only included here if they're eliminated as of the LATEST entry, matching the live
+  // "eliminated" pill (refreshDynamic() checks displayTotal<=0 directly, not this function) --
+  // this used to be sticky (once hit 0, permanently marked eliminated even if healed back above
+  // 0 with the "Heal +"/"Gain +" button), which meant a player who fixed a mis-tap by healing
+  // back up still showed no elimination pill yet was permanently ranked below every player who'd
+  // never hit 0, with no way to tell why from the UI.
   function eliminationOrder(){
     var off=lifeOffset(),running={},order={};
     state.rounds.forEach(function(e,i){
@@ -935,7 +1003,11 @@
         var v=e.scores[pid];
         if(typeof v!=="number"||isNaN(v))return;
         running[pid]=(running[pid]||0)+v;
-        if(order[pid]===undefined&&running[pid]+off<=0)order[pid]=i;
+        if(running[pid]+off<=0){
+          if(order[pid]===undefined)order[pid]=i;
+        } else {
+          delete order[pid];
+        }
       });
     });
     return order;
@@ -944,8 +1016,9 @@
     var target=parseInt(state.targetScore,10),hasTarget=!isNaN(target)&&target>0;
     var lifeMode=state.countdown&&hasTarget;
     var elimOrder=lifeMode?eliminationOrder():null;
+    var totals=totalsById();
     var arr=state.players.map(function(pl){
-      var o={pl:pl,t:totalFor(pl.id)};
+      var o={pl:pl,t:totals[pl.id]||0};
       if(lifeMode){o.eliminated=elimOrder[pl.id]!==undefined;o.elimIdx=o.eliminated?elimOrder[pl.id]:null;}
       return o;
     });
@@ -965,7 +1038,10 @@
         o.rank=rank;
       });
     } else {
-      arr.sort(function(a,b){return b.t-a.t;});
+      // Countdown/life-mode games always rank by survival (handled above) regardless of this
+      // setting -- "lowest wins" is for plain running-total games like Hearts or Golf where fewer
+      // points is better, not for a life total where reaching 0 already means eliminated.
+      arr.sort(state.lowestWins?function(a,b){return a.t-b.t;}:function(a,b){return b.t-a.t;});
       var rank2=0,prev2=null,seen2=0;
       arr.forEach(function(o){seen2++;if(o.t!==prev2){rank2=seen2;prev2=o.t;}o.rank=rank2;});
     }
@@ -980,7 +1056,32 @@
   gameNameEl.value=state.gameName||"";
   gameNameEl.addEventListener("input",function(){state.gameName=gameNameEl.value;state.gameNameCustom=true;save();});
   targetEl.value=state.targetScore||"";
-  targetEl.addEventListener("input",function(){state.targetScore=targetEl.value;save();refreshDynamic();});
+  var lastValidTarget=state.targetScore||"1";
+  // Called after every programmatic (non-typing) assignment of state.targetScore, so the blur
+  // guard below always has an accurate fallback rather than whatever the field happened to
+  // contain the last time a user typed in it.
+  function trackValidTarget(){var v=parseInt(state.targetScore,10);if(!isNaN(v)&&v>=1)lastValidTarget=state.targetScore;}
+  targetEl.addEventListener("input",function(){
+    state.targetScore=targetEl.value;
+    var v=parseInt(targetEl.value,10);
+    if(!isNaN(v)&&v>=1)lastValidTarget=targetEl.value;
+    save();refreshDynamic();
+  });
+  // Countdown modes (Life total, Star Realms, Yu-Gi-Oh!) need a positive starting total to mean
+  // anything -- lifeOffset()/standings() already fall back to "no target" behavior for a blank or
+  // non-positive value, but that silently drops the elimination pill/ranking and shows raw
+  // negative totals instead of remaining life, which reads as broken rather than optional the way
+  // a cleared target does in a plain running-score game. Only enforce this on blur, not on every
+  // keystroke, since digit-by-digit typing passes through a momentarily-empty field.
+  targetEl.addEventListener("blur",function(){
+    if(!state.countdown)return;
+    var v=parseInt(targetEl.value,10);
+    if(isNaN(v)||v<1){
+      alert("Enter a starting total of at least 1.");
+      state.targetScore=lastValidTarget;targetEl.value=lastValidTarget;
+      save();refreshDynamic();
+    }
+  });
 
   // ---- theme ----
   function applyTheme(id){
@@ -1026,7 +1127,7 @@
     var cats=CATEGORY_LABELS[id];
     if(!cats)return;
     cats.forEach(function(catLabel){
-      var mk2={id:uid(),marker:true,category:catLabel};
+      var mk2={id:uid(),marker:true,category:catLabel,order:nextRoundOrder()};
       state.rounds.push(mk2);
       if(state.activeMarkerId===null)state.activeMarkerId=mk2.id;
     });
@@ -1038,6 +1139,7 @@
     }
     state.targetScore=m.target||"";
     targetEl.value=state.targetScore;
+    trackValidTarget();
     state.keypadType=m.keypad||"standard";
     state.countdown=!!m.countdown;
     state.modeId=id;
@@ -1088,6 +1190,7 @@
     state.rounds=[];
     if(!state.gameNameCustom){state.gameName="";gameNameEl.value="";}
     state.targetScore=String(val);targetEl.value=state.targetScore;
+    trackValidTarget();
     state.keypadType="standard";state.countdown=true;state.modeId="life";
     syncTargetLabel();
     save();syncModeMenu();renderAll();clearPendingRestore();
@@ -1124,12 +1227,14 @@
     save();syncDisplayToggles();refreshDynamic();
   }
   function syncDisplayToggles(){
+    var lwt=document.getElementById("lowestwins-toggle");if(lwt)lwt.setAttribute("aria-pressed",state.lowestWins?"true":"false");
     var rt=document.getElementById("rank-toggle");if(rt)rt.setAttribute("aria-pressed",state.showRank?"true":"false");
     var tt=document.getElementById("total-toggle");if(tt)tt.setAttribute("aria-pressed",state.showTotal?"true":"false");
     var pt=document.getElementById("progress-toggle");if(pt)pt.setAttribute("aria-pressed",state.showProgress?"true":"false");
     var at=document.getElementById("adjbtns-toggle");if(at)at.setAttribute("aria-pressed",state.showAdjustBtns?"true":"false");
     document.body.classList.toggle("hide-adjbtns",!state.showAdjustBtns);
   }
+  document.getElementById("lowestwins-toggle").addEventListener("click",function(){applyDisplayToggle("lowestWins",!state.lowestWins);});
   document.getElementById("rank-toggle").addEventListener("click",function(){applyDisplayToggle("showRank",!state.showRank);});
   document.getElementById("total-toggle").addEventListener("click",function(){applyDisplayToggle("showTotal",!state.showTotal);});
   document.getElementById("progress-toggle").addEventListener("click",function(){applyDisplayToggle("showProgress",!state.showProgress);});
@@ -1146,13 +1251,17 @@
   }
 
   var tickers={};
-  function pendingHas(playerId){
-    if(CATEGORY_LABELS[state.modeId])return activeSegmentValue(playerId).has;
-    return Object.prototype.hasOwnProperty.call(buildSegments().current,playerId);
+  // segs is optional -- callers looping over every player (refreshDynamic) should compute
+  // buildSegments() once and pass it in, rather than having each of these calls (potentially
+  // 2 per player) redo the same full scan of state.rounds. Single-call-site callers can omit it
+  // and let it fall back to computing its own.
+  function pendingHas(playerId,segs){
+    if(CATEGORY_LABELS[state.modeId])return activeSegmentValue(playerId,segs).has;
+    return Object.prototype.hasOwnProperty.call((segs||buildSegments()).current,playerId);
   }
-  function pendingScoreFor(playerId){
-    if(CATEGORY_LABELS[state.modeId])return activeSegmentValue(playerId).val;
-    var c=buildSegments().current;return typeof c[playerId]==="number"?c[playerId]:0;
+  function pendingScoreFor(playerId,segs){
+    if(CATEGORY_LABELS[state.modeId])return activeSegmentValue(playerId,segs).val;
+    var c=(segs||buildSegments()).current;return typeof c[playerId]==="number"?c[playerId]:0;
   }
   // Writes are the same regardless of scoring mode — every tap/keypad action appends to (or
   // merges into) the shared ledger. Round-by-round mode just displays activity since the last
@@ -1161,11 +1270,18 @@
   // category already has its own segment), so taps adjust whichever segment activeMarkerId
   // currently points at instead.
   function addAdjustment(playerId,delta){
-    pendingRestore=null;
-    if(CATEGORY_LABELS[state.modeId]&&state.activeMarkerId){
+    pendingRestoreQueue=[];
+    if(CATEGORY_LABELS[state.modeId]){
+      // Every category row can be deleted via its own ×, including the last one -- with none
+      // left, there's no segment for a tap to belong to. Falling through to the generic
+      // running-ledger branch below used to push an un-markered entry straight onto state.rounds
+      // instead; buildSegments() would then silently fold it into whichever category got added
+      // NEXT (it treats any un-markered entries before a marker as belonging to that marker's
+      // segment), corrupting that category's score with points that were never meant for it.
+      if(!state.activeMarkerId){alert("Add a category first.");return;}
       adjustActiveSegment(playerId,delta);
       save();
-      updateTicker(playerId,delta);
+      updateTicker(playerId,delta,state.activeMarkerId);
       refreshDynamic();
       return;
     }
@@ -1174,23 +1290,32 @@
     var withinWindow=t&&(now-t.lastTime)<2000;
     var lastEntry=state.rounds.length?state.rounds[state.rounds.length-1]:null;
     var canMerge=withinWindow&&lastEntry&&!lastEntry.marker&&Object.keys(lastEntry.scores).length===1&&lastEntry.scores[playerId]!==undefined;
+    var targetEntry;
     if(canMerge){
       lastEntry.scores[playerId]+=delta;
       if(lastEntry.scores[playerId]===0)state.rounds.pop();
+      targetEntry=lastEntry;
     } else {
-      var r={id:uid(),scores:{}};r.scores[playerId]=delta;
+      var r={id:uid(),scores:{},order:nextRoundOrder()};r.scores[playerId]=delta;
       state.rounds.push(r);
+      targetEntry=r;
     }
     save();
-    updateTicker(playerId,delta);
+    updateTicker(playerId,delta,targetEntry.id);
     refreshDynamic();
   }
-  function updateTicker(playerId,delta){
+  // contextKey identifies which round/segment the delta actually landed in (a round entry id in
+  // running mode, an activeMarkerId in category mode) -- addAdjustment's own merge/segment logic
+  // is the source of truth for round boundaries, so the ticker just mirrors it here instead of
+  // running its own separate time-only check, which used to keep accumulating a combined "+N"
+  // across a round boundary crossed mid-streak even though the two taps had already landed in
+  // different rounds underneath.
+  function updateTicker(playerId,delta,contextKey){
     var now=Date.now();
     var t=tickers[playerId];
-    var wasActive=t&&(now-t.lastTime)<2000;
-    if(!wasActive){t=tickers[playerId]={value:0,timeoutId:null,lastTime:0};}
-    t.value+=delta;t.lastTime=now;
+    var wasActive=t&&(now-t.lastTime)<2000&&t.contextKey===contextKey;
+    if(!wasActive){t=tickers[playerId]={value:0,timeoutId:null,lastTime:0,contextKey:contextKey};}
+    t.value+=delta;t.lastTime=now;t.contextKey=contextKey;
     var card=cardsEl.querySelector('[data-pid="'+playerId+'"]');if(!card)return;
     var tickerEl=card.querySelector(".ticker");if(!tickerEl)return;
     if(t.timeoutId)clearTimeout(t.timeoutId);
@@ -1220,6 +1345,30 @@
   document.addEventListener("keydown",function(e){if(e.key==="Escape"){closeMenu();closePicker();if(!overlay.hidden){overlay.hidden=true;stopConfetti();}if(!guideOverlay.hidden)closeGuide();if(!kpOverlay.hidden)closeKeypad();}});
 
   var cpick=null;
+  // A colour change only ever touches this one player's own tile + sheet-header dot -- a full
+  // renderAll() (every card torn down and rebuilt, whole sheet table rebuilt) was overkill for
+  // updating a couple of inline styles.
+  function patchPlayerColor(pl){
+    var tile=cardsEl.querySelector('.tile[data-pid="'+pl.id+'"]');
+    if(tile){
+      tile.style.setProperty("--pc",pl.color);
+      var dot=tile.querySelector(".pdot-in");if(dot)dot.style.background=pl.color;
+    }
+    var head=sheetEl.querySelector('[data-head="'+pl.id+'"] .hdot');
+    if(head)head.style.background=pl.color;
+  }
+  // Same idea as patchPlayerColor(), extended to name -- used when a cloud snapshot changes an
+  // existing player's fields but not the player list's identity/order, so a full renderCards()
+  // rebuild (every tile torn down, every listener reattached) isn't needed just to reflect
+  // someone else's rename or colour change.
+  function patchPlayerFields(pl){
+    patchPlayerColor(pl);
+    var tile=cardsEl.querySelector('.tile[data-pid="'+pl.id+'"]');
+    var nameInput=tile&&tile.querySelector(".pname");
+    if(nameInput&&document.activeElement!==nameInput)nameInput.value=pl.name;
+    var htext=sheetEl.querySelector('[data-head="'+pl.id+'"] .htext');
+    if(htext)htext.textContent=pl.name||"—";
+  }
   function openColorPicker(pl,anchor){
     if(!cpick){cpick=document.createElement("div");cpick.className="cpick";cpick.hidden=true;document.body.appendChild(cpick);}
     cpick.innerHTML="";
@@ -1232,7 +1381,7 @@
       b.style.background=col;
       b.setAttribute("aria-label",used?"Colour in use":"Set colour");
       if(used){b.disabled=true;b.title="In use by another player";}
-      else{b.addEventListener("click",function(ev){ev.stopPropagation();pl.color=col;save();closePicker();renderAll();});}
+      else{b.addEventListener("click",function(ev){ev.stopPropagation();pl.color=col;save();closePicker();patchPlayerColor(pl);});}
       cpick.appendChild(b);
     });
     cpick.hidden=false;
@@ -1244,11 +1393,15 @@
   function closePicker(){if(cpick)cpick.hidden=true;}
   window.addEventListener("resize",closePicker);
   // ---- undo state (player restore takes precedence over round undo) ----
-  var pendingRestore=null; // { player, index, scores }
-  function clearPendingRestore(){if(pendingRestore){pendingRestore=null;refreshDynamic();}}
+  // A stack, not a single slot: removing a second player used to silently overwrite the first
+  // player's restore data with no way back, since there was only ever one pendingRestore. Now
+  // each removal pushes its own entry; the undo button restores the most recent one first (LIFO,
+  // matching normal undo expectations) without discarding any earlier ones still queued.
+  var pendingRestoreQueue=[]; // [{ player, index, scores }, ...]
+  function clearPendingRestore(){if(pendingRestoreQueue.length){pendingRestoreQueue=[];refreshDynamic();}}
 
-  function startNewGame(){
-    if(state.rounds.length&&!confirm("Start a new game? This clears all rounds but keeps your players."))return;
+  function startNewGame(skipConfirm){
+    if(!skipConfirm&&state.rounds.length&&!confirm("Start a new game? This clears all rounds but keeps your players."))return;
     state.rounds=[];state.activeMarkerId=null;
     seedCategories(state.modeId);
     save();renderAll();clearPendingRestore();
@@ -1268,6 +1421,11 @@
   function requestWakeLock(){
     if(!("wakeLock" in navigator))return;
     navigator.wakeLock.request("screen").then(function(sentinel){
+      // request() is async, so game mode can be toggled off again before this resolves --
+      // without this check the late-arriving sentinel would overwrite the null left by
+      // releaseWakeLock() and hold the screen awake indefinitely with no toggle left to turn it
+      // back off (nothing but a tab-hide/show cycle would ever release it).
+      if(!state.gameMode){sentinel.release().catch(function(){});return;}
       wakeLockSentinel=sentinel;
       sentinel.addEventListener("release",function(){wakeLockSentinel=null;});
     }).catch(function(){});
@@ -1303,7 +1461,11 @@
   syncGameModeUI();
 
   document.getElementById("menu-reset").addEventListener("click",function(){
-    if(!confirm("Reset everything? This clears all players, scores, and game settings. Cannot be undone."))return;
+    if(!confirm("Reset everything? This clears all players, scores, and game settings, and disconnects any shared game. Cannot be undone."))return;
+    // Tear down any active share BEFORE resetting local state -- otherwise the connection stays
+    // live and the very next save() below would mirror this freshly-blanked state out to
+    // whatever game was shared, wiping it for everyone else still using that code.
+    if(cloud.code)leaveSharedGame();
     Object.keys(tickers).forEach(function(k){if(tickers[k]&&tickers[k].timeoutId)clearTimeout(tickers[k].timeoutId);});
     tickers={};
     state.gameName="";
@@ -1318,6 +1480,7 @@
     state.showTotal=true;
     state.showProgress=true;
     state.showAdjustBtns=true;
+    state.lowestWins=false;
     state.countdown=false;
     state.activeMarkerId=null;
     state.seenGuide=false;
@@ -1328,7 +1491,7 @@
     applyScoreMode("running");
     syncModeMenu();
     syncDisplayToggles();
-    pendingRestore=null;
+    pendingRestoreQueue=[];
     renderAll();
     closeMenu();
     openGuide();
@@ -1480,9 +1643,14 @@
     var halveBtn=document.getElementById("kp-halve");
     if(halveBtn){
       halveBtn.addEventListener("click",function(){
+        // Applies immediately rather than staging into kp-display the way quick-value buttons
+        // do -- staging it left a "− Damage"/"Gain +" choice sitting right next to a value whose
+        // whole point was already "halve", so tapping the wrong one of the two doubled LP instead
+        // of halving it. Halving has only one sensible outcome, so just commit it.
         var cur=totalFor(kpState.playerId)+lifeOffset();
-        kpState.value=String(Math.max(0,Math.floor(cur/2)));
-        updateKpDisplay();
+        var half=Math.max(0,Math.floor(cur/2));
+        addAdjustment(kpState.playerId,half-cur);
+        closeKeypad();
       });
     }
   }
@@ -1513,8 +1681,12 @@
     });
     document.getElementById("pk-bust").addEventListener("click",function(){
       if(state.scoreMode==="rounds"){
-        var entry={id:uid(),scores:{}};entry.scores[kpState.playerId]=0;
-        state.rounds.push(entry);save();refreshDynamic();
+        // setCurrentValue() clears any existing entry this player already has in the open round
+        // before writing the new one -- pushing a bare {scores:{[pid]:0}} entry on top used to
+        // just ADD a zero alongside whatever score they'd already entered for this round (e.g.
+        // from Flip 7's own "Add to score"), leaving the round's real total untouched instead of
+        // wiping it to 0 like a bust should.
+        setCurrentValue(kpState.playerId,"0");save();refreshDynamic();
       }
       closeKeypad();
     });
@@ -1593,54 +1765,37 @@
         updateSushigoTile(id);updateSushigo();
       });
     });
-    document.querySelectorAll("[data-maki]").forEach(function(b){
-      b.addEventListener("click",function(){
-        var v=parseInt(b.getAttribute("data-maki"),10);
-        pickerState.sushigo.maki=v;
-        document.querySelectorAll("[data-maki]").forEach(function(x){x.classList.remove("on");});
-        b.classList.add("on");
-        var sec=document.getElementById("maki-split");
-        if(v===0){
-          sec.hidden=true;
-          pickerState.sushigo.makiSplit=1;
-          document.querySelectorAll("[data-makisplit]").forEach(function(x){x.classList.toggle("on",x.getAttribute("data-makisplit")==="1");});
-        } else {
-          sec.hidden=false;
-        }
-        updateSushigo();
+    // Maki/pudding and their tie-split counts are all the same shape underneath: a row of
+    // buttons where exactly one is ever "on", picking a data-* value into pickerState.sushigo.
+    // Maki/pudding additionally reveal a linked split-count section (and reset it to a 1-way
+    // split) whenever their own value drops to 0 -- everything else about the four groups is
+    // identical, so that's the only thing that varies via onSelect.
+    function wireChoiceGroup(dataAttr,stateKey,onSelect){
+      document.querySelectorAll("[data-"+dataAttr+"]").forEach(function(b){
+        b.addEventListener("click",function(){
+          var v=parseInt(b.getAttribute("data-"+dataAttr),10);
+          pickerState.sushigo[stateKey]=v;
+          document.querySelectorAll("[data-"+dataAttr+"]").forEach(function(x){x.classList.remove("on");});
+          b.classList.add("on");
+          if(onSelect)onSelect(v);
+          updateSushigo();
+        });
       });
-    });
-    document.querySelectorAll("[data-makisplit]").forEach(function(b){
-      b.addEventListener("click",function(){
-        pickerState.sushigo.makiSplit=parseInt(b.getAttribute("data-makisplit"),10);
-        document.querySelectorAll("[data-makisplit]").forEach(function(x){x.classList.remove("on");});
-        b.classList.add("on");updateSushigo();
-      });
-    });
-    document.querySelectorAll("[data-pudding]").forEach(function(b){
-      b.addEventListener("click",function(){
-        var v=parseInt(b.getAttribute("data-pudding"),10);
-        pickerState.sushigo.pudding=v;
-        document.querySelectorAll("[data-pudding]").forEach(function(x){x.classList.remove("on");});
-        b.classList.add("on");
-        var sec=document.getElementById("pudding-split");
-        if(v===0){
-          sec.hidden=true;
-          pickerState.sushigo.puddingSplit=1;
-          document.querySelectorAll("[data-puddingsplit]").forEach(function(x){x.classList.toggle("on",x.getAttribute("data-puddingsplit")==="1");});
-        } else {
-          sec.hidden=false;
-        }
-        updateSushigo();
-      });
-    });
-    document.querySelectorAll("[data-puddingsplit]").forEach(function(b){
-      b.addEventListener("click",function(){
-        pickerState.sushigo.puddingSplit=parseInt(b.getAttribute("data-puddingsplit"),10);
-        document.querySelectorAll("[data-puddingsplit]").forEach(function(x){x.classList.remove("on");});
-        b.classList.add("on");updateSushigo();
-      });
-    });
+    }
+    function wireSplitReveal(value,splitSectionId,splitDataAttr,splitStateKey){
+      var sec=document.getElementById(splitSectionId);
+      if(value===0){
+        sec.hidden=true;
+        pickerState.sushigo[splitStateKey]=1;
+        document.querySelectorAll("[data-"+splitDataAttr+"]").forEach(function(x){x.classList.toggle("on",x.getAttribute("data-"+splitDataAttr)==="1");});
+      } else {
+        sec.hidden=false;
+      }
+    }
+    wireChoiceGroup("maki","maki",function(v){wireSplitReveal(v,"maki-split","makisplit","makiSplit");});
+    wireChoiceGroup("makisplit","makiSplit");
+    wireChoiceGroup("pudding","pudding",function(v){wireSplitReveal(v,"pudding-split","puddingsplit","puddingSplit");});
+    wireChoiceGroup("puddingsplit","puddingSplit");
     document.getElementById("pk-add").addEventListener("click",function(){
       var t=calcSushigo();addAdjustment(kpState.playerId,t);closeKeypad();
     });
@@ -1695,29 +1850,49 @@
   });
 
   // ---- undo ----
+  // Every score entry is single-player (nothing ever adds a second key to an existing entry),
+  // so removing a player empties that entry's scores completely rather than partially -- it's
+  // never spliced out at removal time, since pendingRestoreQueue looks entries back up by id and
+  // needs them to still exist if the removal gets restored. That leaves harmless-but-confusing
+  // empty {scores:{}} orphans behind in the ledger, which this skips past (for both what the
+  // button displays and what a click actually undoes, so they always agree) rather than treating
+  // as a real "last entry" that needs its own separate undo click.
+  function lastRoundIndex(){
+    for(var i=state.rounds.length-1;i>=0;i--){
+      var r=state.rounds[i];
+      if(r.marker||Object.keys(r.scores).length)return i;
+    }
+    return -1;
+  }
   document.getElementById("undo-btn").addEventListener("click",function(){
-    if(pendingRestore){
-      state.players.splice(pendingRestore.index,0,pendingRestore.player);
-      state.rounds.forEach(function(r){if(!r.marker&&pendingRestore.scores[r.id]!==undefined)r.scores[pendingRestore.player.id]=pendingRestore.scores[r.id];});
-      pendingRestore=null;save();renderAll();return;
+    if(pendingRestoreQueue.length){
+      var pr=pendingRestoreQueue.pop();
+      state.players.splice(pr.index,0,pr.player);
+      state.rounds.forEach(function(r){if(!r.marker&&pr.scores[r.id]!==undefined)r.scores[pr.player.id]=pr.scores[r.id];});
+      save();renderAll();return;
     }
     if(CATEGORY_LABELS[state.modeId])return;
-    if(!state.rounds.length)return;
-    state.rounds.pop();save();renderAll();
+    var li=lastRoundIndex();
+    if(li<0)return;
+    state.rounds.splice(li,state.rounds.length-li);
+    save();renderAll();
   });
   function updateUndoBtn(){
     var btn=document.getElementById("undo-btn");
-    if(pendingRestore){
+    if(pendingRestoreQueue.length){
+      var pr=pendingRestoreQueue[pendingRestoreQueue.length-1];
+      var more=pendingRestoreQueue.length-1;
       btn.disabled=false;
-      btn.textContent="Restore "+(pendingRestore.player.name||"player");
+      btn.textContent="Restore "+(pr.player.name||"player")+(more?" (+"+more+" more)":"");
       return;
     }
     // Category-table modes splice entries into arbitrary array positions (not always the tail),
     // so "undo = pop the last array entry" doesn't map to anything the user would recognise --
     // use each row's × to delete a category instead.
     if(CATEGORY_LABELS[state.modeId]){btn.disabled=true;btn.textContent="Use × next to a category to remove it";return;}
-    if(!state.rounds.length){btn.disabled=true;btn.textContent="Nothing to undo";return;}
-    var last=state.rounds[state.rounds.length-1];
+    var li=lastRoundIndex();
+    if(li<0){btn.disabled=true;btn.textContent="Nothing to undo";return;}
+    var last=state.rounds[li];
     if(last.marker){btn.disabled=false;btn.textContent="Undo last round";return;}
     var pids=Object.keys(last.scores);
     if(pids.length===1){
@@ -1778,7 +1953,7 @@
         var idx=state.players.indexOf(pl);
         var savedScores={};
         state.rounds.forEach(function(r){if(!r.marker&&r.scores[pl.id]!==undefined)savedScores[r.id]=r.scores[pl.id];});
-        pendingRestore={player:pl,index:idx,scores:savedScores};
+        pendingRestoreQueue.push({player:pl,index:idx,scores:savedScores});
         state.players=state.players.filter(function(x){return x.id!==pl.id;});
         state.rounds.forEach(function(r){if(!r.marker)delete r.scores[pl.id];});
         save();renderAll();
@@ -1815,7 +1990,7 @@
     if(raw!==""&&raw!=="-"){
       var val=parseInt(raw,10);
       if(!isNaN(val)){
-        var entry={id:uid(),scores:{}};entry.scores[pid]=val;
+        var entry={id:uid(),scores:{},order:orderBefore(state.rounds[markerIdx]&&state.rounds[markerIdx].order)};entry.scores[pid]=val;
         state.rounds.splice(markerIdx,0,entry);
       }
     }
@@ -1836,7 +2011,7 @@
     if(raw!==""&&raw!=="-"){
       var val=parseInt(raw,10);
       if(!isNaN(val)){
-        var entry={id:uid(),scores:{}};entry.scores[pid]=val;
+        var entry={id:uid(),scores:{},order:nextRoundOrder()};entry.scores[pid]=val;
         state.rounds.push(entry);
       }
     }
@@ -1870,9 +2045,9 @@
     for(var j=startIdx;j<markerIdx;j++){var v=state.rounds[j].scores[playerId];if(typeof v==="number"&&!isNaN(v))cur+=v;}
     setSegmentValue(markerId,playerId,String(cur+delta));
   }
-  function activeSegmentValue(playerId){
+  function activeSegmentValue(playerId,segs){
     if(!state.activeMarkerId)return{has:false,val:0};
-    var seg=buildSegments().completed.filter(function(s){return s.markerId===state.activeMarkerId;})[0];
+    var seg=(segs||buildSegments()).completed.filter(function(s){return s.markerId===state.activeMarkerId;})[0];
     if(!seg)return{has:false,val:0};
     var has=Object.prototype.hasOwnProperty.call(seg.scores,playerId);
     return{has:has,val:has?seg.scores[playerId]:0};
@@ -1991,7 +2166,7 @@
     state.players.forEach(function(pl){
       var val;
       if(isCategoryMode){
-        var av=activeSegmentValue(pl.id);
+        var av=activeSegmentValue(pl.id,segs);
         val=av.has?av.val:"";
       } else {
         var v=segs.current[pl.id];
@@ -2030,8 +2205,8 @@
       var displayTotal=total+offset;
       var mini=c.querySelector(".mini-total-val");if(mini)mini.textContent=displayTotal;
       var miniEl=c.querySelector(".mini-total");if(miniEl)miniEl.style.display=state.showTotal?"":"none";
-      var entered=isRounds&&pendingHas(pl.id);
-      c.querySelector(".tnum").textContent=isRounds?pendingScoreFor(pl.id):displayTotal;
+      var entered=isRounds&&pendingHas(pl.id,segs);
+      c.querySelector(".tnum").textContent=isRounds?pendingScoreFor(pl.id,segs):displayTotal;
       c.classList.toggle("rnd-entered",entered);
       c.classList.toggle("rnd-pending",isRounds&&!entered);
       var isLeader=hasActivity&&rankById[pl.id]===1;
@@ -2060,20 +2235,30 @@
 
   document.getElementById("addround").addEventListener("click",function(){
     if(!state.players.length){alert("Add at least one player first.");return;}
-    pendingRestore=null;
+    pendingRestoreQueue=[];
+    // Adding a round/category only touches state.rounds (a new sheet row), never state.players --
+    // renderCards() has nothing to do here, so skip the card teardown+rebuild renderAll() would
+    // otherwise trigger and go straight to the two functions that actually depend on rounds.
     if(CATEGORY_LABELS[state.modeId]){
       var segsCat=buildSegments();
-      var newCat={id:uid(),marker:true,category:roundLabel(segsCat.completed.length)};
+      // roundLabel(idx) picks a label purely by position, which duplicates an existing category
+      // once any earlier one has been deleted (e.g. delete category 2 of 9, then "+ Add category"
+      // -- the table now has 8, so roundLabel(8) hands back category 9's label even though
+      // category 9 is still sitting right there). Pick the first label not already in use instead.
+      var catList=CATEGORY_LABELS[state.modeId];
+      var usedLabels={};segsCat.completed.forEach(function(s){if(s.category)usedLabels[s.category]=true;});
+      var nextLabel=catList.filter(function(l){return !usedLabels[l];})[0]||("R"+(segsCat.completed.length+1));
+      var newCat={id:uid(),marker:true,category:nextLabel,order:nextRoundOrder()};
       state.rounds.push(newCat);
       state.activeMarkerId=newCat.id;
-      save();renderAll();
+      save();renderSheet();refreshDynamic();
       return;
     }
     var segsNow=buildSegments();
     if(!Object.keys(segsNow.current).length){alert("Enter at least one player's score before adding the round.");return;}
-    var newMarker={id:uid(),marker:true};
+    var newMarker={id:uid(),marker:true,order:nextRoundOrder()};
     state.rounds.push(newMarker);
-    save();renderAll();
+    save();renderSheet();refreshDynamic();
   });
 
   finishBtn.addEventListener("click",openFinish);
@@ -2097,7 +2282,7 @@
     html+='</ul><div class="banner-btns"><button class="bbtn primary" id="b-share">Share results</button><button class="bbtn full" id="b-save">Save as image</button><button class="bbtn" id="b-new">New game</button><button class="bbtn" id="b-close">Close</button></div>';
     bannerEl.innerHTML=html;
     document.getElementById("b-close").addEventListener("click",function(){overlay.hidden=true;stopConfetti();});
-    document.getElementById("b-new").addEventListener("click",function(){state.rounds=[];state.activeMarkerId=null;seedCategories(state.modeId);save();renderAll();overlay.hidden=true;stopConfetti();});
+    document.getElementById("b-new").addEventListener("click",function(){startNewGame(true);overlay.hidden=true;stopConfetti();});
     document.getElementById("b-save").addEventListener("click",saveImage);
     document.getElementById("b-share").addEventListener("click",shareImage);
     overlay.hidden=false;
@@ -2131,40 +2316,42 @@
     var name=(state.gameName||"scorepad").replace(/[^\w\- ]+/g,"").trim()||"scorepad";
     return name+"-results.png";
   }
-  function saveImage(){
-    var ready=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
-    ready.then(function(){
-      var canvas=drawResults();
-      canvas.toBlob(function(blob){
-        if(!blob){window.open(canvas.toDataURL("image/png"));return;}
-        downloadBlob(blob,resultsFilename());
-      },"image/png");
-    });
-  }
-  function shareImage(){
+  // Shared setup for both export paths: wait for web fonts (so the canvas doesn't render with a
+  // fallback font mid-swap), draw the results canvas, and rasterize it -- falling back to
+  // opening the raw data URL if toBlob() isn't supported. Save and Share only differ in what
+  // they do with the resulting blob.
+  function withResultsBlob(cb){
     var ready=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
     ready.then(function(){
       var canvas=drawResults();
       var filename=resultsFilename();
       canvas.toBlob(function(blob){
         if(!blob){window.open(canvas.toDataURL("image/png"));return;}
-        var file;
-        try{file=new File([blob],filename,{type:"image/png"});}
-        catch(e){downloadBlob(blob,filename);return;}
-        var shareData={
-          files:[file],
-          title:(state.gameName||"Game night")+" results",
-          text:(state.gameName||"Game night")+" results — via scorepad.uk"
-        };
-        if(navigator.canShare&&navigator.canShare(shareData)&&navigator.share){
-          navigator.share(shareData).catch(function(err){
-            if(err&&err.name==="AbortError")return;
-            downloadBlob(blob,filename);
-          });
-        } else {
-          downloadBlob(blob,filename);
-        }
+        cb(blob,filename);
       },"image/png");
+    });
+  }
+  function saveImage(){
+    withResultsBlob(function(blob,filename){downloadBlob(blob,filename);});
+  }
+  function shareImage(){
+    withResultsBlob(function(blob,filename){
+      var file;
+      try{file=new File([blob],filename,{type:"image/png"});}
+      catch(e){downloadBlob(blob,filename);return;}
+      var shareData={
+        files:[file],
+        title:(state.gameName||"Game night")+" results",
+        text:(state.gameName||"Game night")+" results — via scorepad.uk"
+      };
+      if(navigator.canShare&&navigator.canShare(shareData)&&navigator.share){
+        navigator.share(shareData).catch(function(err){
+          if(err&&err.name==="AbortError")return;
+          downloadBlob(blob,filename);
+        });
+      } else {
+        downloadBlob(blob,filename);
+      }
     });
   }
   function drawResults(){
@@ -2242,32 +2429,61 @@
   // orphan their entire score history. Players are instead keyed by their own (already-stable)
   // local id directly, with an explicit `order` field standing in for position since Firebase
   // doesn't reliably preserve the array order of non-numeric keys.
-  var CLOUD_META_FIELDS=["gameName","targetScore","scoreMode","keypadType","modeId","countdown"];
+  // lowestWins changes who standings() computes as the winner, not just how a tile looks --
+  // unlike showRank/showTotal/etc (deliberately left out of this list as per-device display
+  // preferences), every device sharing a game needs to agree on it or they'd show different
+  // winners for the same scores.
+  var CLOUD_META_FIELDS=["gameName","targetScore","scoreMode","keypadType","modeId","countdown","lowestWins"];
   var FB=null;
-  var cloud={code:null,connected:false,seeding:false,isSeedMirror:false,seedPending:0,applyingRemote:false,keyMap:{},valueCache:{},playerCache:{},lastMeta:null,unsub:null,unsubConn:null};
+  var cloud={code:null,connected:false,seeding:false,isSeedMirror:false,seedPending:0,applyingRemote:false,keyMap:{},valueCache:{},playerCache:{},lastMeta:null,unsub:null,unsubConn:null,pendingMeta:{},pendingPlayerWrites:{},pendingRoundWrites:{}};
 
   function cloudGameRef(code){return FB.child(FB.ref(FB.db),"games/"+code);}
-  // Starting/joining a brand-new empty game triggers ONE initial cloudMirror() that seeds every
-  // child at once (meta + every player + every round) via separate FB.set/push calls. Firebase
-  // echoes each of those back through onValue as soon as its own write lands -- often well before
-  // the others finish -- so the listener would otherwise see a string of partial snapshots (e.g.
-  // meta with no players yet) and blindly apply them as authoritative remote state, wiping out
-  // the very players/rounds we just wrote a moment ago (this is what "sharing resets the game"
-  // was). Tracking that specific seed burst lets the onValue handler drop echoes of it until it's
-  // fully landed. This is deliberately scoped to ONLY the initial seed mirror, not to every
-  // ordinary edit's mirror-out during normal shared play: an earlier version gated ALL snapshots
-  // on ANY outstanding write, which sounds safer but isn't -- two devices editing different
-  // players at once each have their own perpetually-refilling trickle of outstanding writes, and
-  // gating on that starved each device of the other's edits (see test-player-sync-hardening.js).
-  // A single multi-field burst only ever happens at seed time; every other mirror-out touches at
-  // most the handful of fields that actually changed, so there's no analogous partial-echo risk
-  // to guard against there.
-  function trackWrite(thenable){
+  // Every write to Firebase echoes straight back through this same onValue listener once it
+  // lands -- including our OWN writes -- and each echo carries the full current snapshot for
+  // meta/players/rounds, applied wholesale. Two distinct problems fall out of that:
+  //
+  // 1) Starting/joining a brand-new empty game fires ONE cloudMirror() that seeds several
+  //    fields at once (meta + every player + every round). Each field's write can settle at a
+  //    different time, so an early echo can reflect only SOME of them -- e.g. meta landed but
+  //    players haven't -- and applying it would wipe the players/rounds we just wrote a moment
+  //    ago (this is what "sharing resets the game" was). Fixing this needs a GLOBAL gate: don't
+  //    trust ANY snapshot until the whole seed burst has landed, tracked via
+  //    cloud.isSeedMirror/cloud.seedPending.
+  //
+  // 2) Type a name or tap a score quickly during ONGOING play and each keystroke/tap fires its
+  //    own write; the echo for an EARLIER one can arrive after a LATER one has already landed
+  //    locally, and applying it would regress that one field back to the older value -- a typed
+  //    name truncating to its first few letters, a score reverting toward 0. A global gate is
+  //    the wrong tool here: two devices editing different players at once each have their own
+  //    perpetually-refilling trickle of outstanding writes, so gating the whole snapshot on ANY
+  //    of them starves each device of the other's edits (see test-player-sync-hardening.js).
+  //    This needs a PER-FIELD gate instead: keep our own more-recent value only for the specific
+  //    field(s) we're still waiting to hear back on, tracked via
+  //    cloud.pendingMeta/pendingPlayerWrites/pendingRoundWrites.
+  //
+  // Every write is tracked both ways at once -- the per-field map always, and the global seed
+  // counter only while cloud.isSeedMirror is set (i.e. only for the one-time initial burst).
+  //
+  // Registering the write has to happen BEFORE the write is actually issued, not after: calling
+  // beginEntityWrite(map,id,FB.set(...)) would evaluate FB.set(...) as an argument first, and
+  // FB.set() can turn around and fire OUR OWN onValue listener before that call even returns
+  // (the local cache updates eagerly, ahead of the network round-trip) -- so the pending count
+  // would still read 0 at the exact moment the echo needing it arrives. Splitting this into
+  // beginEntityWrite() (called first, synchronously bumps the counts) and the finish() it
+  // returns (called once the actual write/thenable exists) closes that window.
+  function beginEntityWrite(map,id){
+    map[id]=(map[id]||0)+1;
     if(cloud.isSeedMirror)cloud.seedPending++;
     var seeded=cloud.isSeedMirror;
-    var settle=function(){if(seeded)cloud.seedPending--;};
-    if(thenable&&typeof thenable.then==="function")thenable.then(settle,settle);
-    else settle();
+    return function finish(thenable){
+      var settle=function(){
+        map[id]--;
+        if(map[id]<=0)delete map[id];
+        if(seeded)cloud.seedPending--;
+      };
+      if(thenable&&typeof thenable.then==="function")thenable.then(settle,settle);
+      else settle();
+    };
   }
   function cloudMirror(){
     if(!FB||!cloud.code||cloud.applyingRemote)return;
@@ -2282,7 +2498,11 @@
   }
   function cloudMirrorMeta(){
     var meta=cloudMetaSnapshot(),metaJson=JSON.stringify(meta);
-    if(cloud.lastMeta!==metaJson){cloud.lastMeta=metaJson;trackWrite(FB.set(FB.child(cloudGameRef(cloud.code),"meta"),meta));}
+    if(cloud.lastMeta!==metaJson){
+      cloud.lastMeta=metaJson;
+      var finish=beginEntityWrite(cloud.pendingMeta,"_");
+      finish(FB.set(FB.child(cloudGameRef(cloud.code),"meta"),meta));
+    }
   }
   function cloudMirrorPlayers(){
     var playersRef=FB.child(cloudGameRef(cloud.code),"players");
@@ -2293,30 +2513,63 @@
       var json=JSON.stringify(value);
       if(cloud.playerCache[p.id]===json)return;
       cloud.playerCache[p.id]=json;
-      trackWrite(FB.set(FB.child(playersRef,p.id),value));
+      var finish=beginEntityWrite(cloud.pendingPlayerWrites,p.id);
+      finish(FB.set(FB.child(playersRef,p.id),value));
     });
     Object.keys(cloud.playerCache).forEach(function(id){
       if(seen[id])return;
       delete cloud.playerCache[id];
-      trackWrite(FB.remove(FB.child(playersRef,id)));
+      var finish=beginEntityWrite(cloud.pendingPlayerWrites,id);
+      finish(FB.remove(FB.child(playersRef,id)));
     });
+  }
+  // A round entry and its Firebase-side shape differ only by dropping/adding the local `id`
+  // (Firebase keys ARE the id once synced, so it'd be redundant to store it twice) -- shared here
+  // since this conversion previously got hand-written three separate times across
+  // cloudMirrorRounds/applyCloudSnapshot and had already started drifting apart slightly.
+  function roundToCloudValue(entry){
+    // order rides along on every entry so applyCloudSnapshot can reconstruct exact ledger
+    // position after a round-trip -- see the comment on nextRoundOrder()/orderBefore() above for
+    // why Firebase's own per-child keys aren't sufithcient for that on their own. Omitted (not
+    // written as undefined, which Firebase would reject) for older entries that predate this
+    // field; cloudValueToRound leaves order unset for those too, and applyCloudSnapshot falls
+    // back to key-sort for anything without one.
+    var withOrder=typeof entry.order==="number"?{order:entry.order}:{};
+    if(entry.marker)return Object.assign({},withOrder,entry.category?{marker:true,category:entry.category}:{marker:true});
+    return Object.assign({},withOrder,{scores:entry.scores});
+  }
+  function cloudValueToRound(key,v){
+    var withOrder=typeof v.order==="number"?{order:v.order}:{};
+    if(v.marker)return Object.assign({id:key},withOrder,v.category?{marker:true,category:v.category}:{marker:true});
+    return Object.assign({id:key},withOrder,{scores:v.scores||{}});
   }
   function cloudMirrorRounds(){
     var roundsRef=FB.child(cloudGameRef(cloud.code),"rounds");
     var seen={};
     state.rounds.forEach(function(entry){
       seen[entry.id]=true;
-      var value=entry.marker?(entry.category?{marker:true,category:entry.category}:{marker:true}):{scores:entry.scores};
+      var value=roundToCloudValue(entry);
       var json=JSON.stringify(value);
       if(cloud.valueCache[entry.id]===json)return;
       cloud.valueCache[entry.id]=json;
       var key=cloud.keyMap[entry.id];
-      if(key){trackWrite(FB.set(FB.child(roundsRef,key),value));}
-      else{var newRef=FB.push(roundsRef,value);cloud.keyMap[entry.id]=newRef.key;trackWrite(newRef);}
+      if(key){
+        var finish=beginEntityWrite(cloud.pendingRoundWrites,key);
+        finish(FB.set(FB.child(roundsRef,key),value));
+      } else {
+        // push(ref) with no value mints a key synchronously (no network round-trip needed for
+        // that part) without writing anything -- so the key is known in time to register it
+        // BEFORE the actual write, same as the set() branch above.
+        var newRef=FB.push(roundsRef);
+        cloud.keyMap[entry.id]=newRef.key;
+        var finishPush=beginEntityWrite(cloud.pendingRoundWrites,newRef.key);
+        finishPush(FB.set(newRef,value));
+      }
     });
     Object.keys(cloud.keyMap).forEach(function(localId){
       if(seen[localId])return;
-      trackWrite(FB.remove(FB.child(roundsRef,cloud.keyMap[localId])));
+      var finish=beginEntityWrite(cloud.pendingRoundWrites,cloud.keyMap[localId]);
+      finish(FB.remove(FB.child(roundsRef,cloud.keyMap[localId])));
       delete cloud.keyMap[localId];
       delete cloud.valueCache[localId];
     });
@@ -2324,47 +2577,151 @@
   function applyCloudSnapshot(val){
     cloud.applyingRemote=true;
     val=val||{};
-    var meta=val.meta||{};
-    CLOUD_META_FIELDS.forEach(function(k){if(meta[k]!==undefined)state[k]=meta[k];});
+    // Meta, players, and rounds are each merged rather than replaced wholesale: any field with
+    // a write of ours still in flight (cloud.pendingMeta/pendingPlayerWrites/pendingRoundWrites)
+    // keeps its current local value instead of adopting this snapshot's value for that field,
+    // since this snapshot may predate that write actually landing. See the comment on
+    // beginEntityWrite() above for why -- this is what stops fast typing/tapping from getting
+    // silently reverted mid-edit.
+    if(!cloud.pendingMeta["_"]){
+      var meta=val.meta||{};
+      CLOUD_META_FIELDS.forEach(function(k){if(meta[k]!==undefined)state[k]=meta[k];});
+    }
     var playersVal=val.players||{};
+    var localPlayerById={};state.players.forEach(function(p){localPlayerById[p.id]=p;});
+    // Captured before state.players is reassigned below, so it can be compared against the new
+    // list afterward -- a plain score tap (the single most common cloud update) never touches
+    // state.players at all, so most of the time this signature won't have moved and the full
+    // card teardown+rebuild below can be skipped in favour of patching name/colour in place.
+    var oldPlayerSig=state.players.map(function(p){return p.id;}).join(",");
     var pids=Object.keys(playersVal).sort(function(a,b){return(playersVal[a].order||0)-(playersVal[b].order||0);});
+    Object.keys(cloud.pendingPlayerWrites).forEach(function(id){
+      if(localPlayerById[id]&&pids.indexOf(id)===-1)pids.push(id);
+    });
     var newPlayerCache={};
     state.players=pids.map(function(id){
+      if(cloud.pendingPlayerWrites[id]&&localPlayerById[id]){
+        newPlayerCache[id]=cloud.playerCache[id];
+        return localPlayerById[id];
+      }
       var v=playersVal[id]||{};
       newPlayerCache[id]=JSON.stringify({name:v.name||"",color:v.color||"",order:v.order||0});
+      var existing=localPlayerById[id];
+      if(existing){
+        // Mutate the existing object in place rather than returning a new one. The .pname
+        // "input" listener (wired once, in renderCards()) closes over this exact object -- every
+        // snapshot used to replace it wholesale regardless of whether THIS player's fields
+        // actually changed, which was silently safe only because renderAll() unconditionally
+        // re-ran renderCards() right after and re-wired every listener to match. Once rendering
+        // started skipping that full rebuild for snapshots that don't touch the player list's
+        // identity/order (see playersStructureUnchanged below), a stale closure would keep
+        // mutating an orphaned object that cloudMirrorPlayers() no longer iterates -- so an edit
+        // typed right after an unrelated player's change silently stopped syncing at all.
+        existing.name=v.name||"";
+        existing.color=v.color||null;
+        return existing;
+      }
       return{id:id,name:v.name||"",color:v.color||null};
     });
     cloud.playerCache=newPlayerCache;
+    var playersStructureUnchanged=oldPlayerSig===state.players.map(function(p){return p.id;}).join(",");
     var roundsVal=val.rounds||{};
-    var keys=Object.keys(roundsVal).sort();
+    var localRoundByKey={};
+    state.rounds.forEach(function(e){localRoundByKey[cloud.keyMap[e.id]||e.id]=e;});
+    // Prefer each entry's explicit `order` (present on anything created after this field was
+    // added -- see nextRoundOrder()/orderBefore()) over Firebase's own key ordering, which only
+    // reflects write time and gets a setSegmentValue() insertion wrong (full explanation on
+    // nextRoundOrder() above). Checks localRoundByKey too, not just roundsVal, since a key still
+    // in cloud.pendingRoundWrites may not have landed in this snapshot yet at all. Only actually
+    // changes anything when both sides of a comparison have an order value -- older entries from
+    // before this field existed simply fall back to key order against each other, same as before.
+    function orderForKey(key){
+      var v=roundsVal[key];
+      if(v&&typeof v.order==="number")return v.order;
+      var le=localRoundByKey[key];
+      if(le&&typeof le.order==="number")return le.order;
+      return null;
+    }
+    function compareRoundKeys(a,b){
+      var oa=orderForKey(a),ob=orderForKey(b);
+      if(oa!==null&&ob!==null)return oa-ob;
+      return a<b?-1:(a>b?1:0);
+    }
+    var keys=Object.keys(roundsVal).sort(compareRoundKeys);
+    Object.keys(cloud.pendingRoundWrites).forEach(function(key){
+      if(localRoundByKey[key]&&keys.indexOf(key)===-1)keys.push(key);
+    });
+    keys.sort(compareRoundKeys);
     var newKeyMap={},newValueCache={};
     state.rounds=keys.map(function(key){
+      if(cloud.pendingRoundWrites[key]&&localRoundByKey[key]){
+        var le=localRoundByKey[key];
+        newKeyMap[le.id]=key;
+        newValueCache[key]=JSON.stringify(roundToCloudValue(le));
+        return le;
+      }
       var v=roundsVal[key]||{};
-      var value=v.marker?(v.category?{marker:true,category:v.category}:{marker:true}):{scores:v.scores||{}};
+      var normalized=cloudValueToRound(key,v);
       newKeyMap[key]=key;
-      newValueCache[key]=JSON.stringify(value);
-      return v.marker?(v.category?{id:key,marker:true,category:v.category}:{id:key,marker:true}):{id:key,scores:v.scores||{}};
+      newValueCache[key]=JSON.stringify(roundToCloudValue(normalized));
+      return normalized;
     });
     cloud.keyMap=newKeyMap;
     cloud.valueCache=newValueCache;
     cloud.lastMeta=JSON.stringify(cloudMetaSnapshot());
     ensureShape(state);
-    pendingRestore=null;
+    // activeMarkerId isn't synced (it's a local "which category am I filling in" pointer, not
+    // game data) -- two ways that leaves it wrong after a snapshot merges in remote rounds:
+    // 1) another device deletes the category THIS device currently has active, so the merged
+    //    state.rounds above no longer contains that marker but this device doesn't know that.
+    //    adjustActiveSegment() already guards against crashing on a dangling id (markerIdx<0 ->
+    //    return), but that just makes every tap silently do nothing with no feedback.
+    // 2) a device JOINS an already-in-progress category-mode game: seedCategories() (which is
+    //    what normally assigns the first activeMarkerId) only ever runs for the device that
+    //    originally picked the mode, so a freshly-joined guest's activeMarkerId starts at its
+    //    default of null even though the synced rounds already contain real categories -- with
+    //    no active row, there's also no ▲▼ control anywhere in the UI to set one, so a guest in
+    //    this state could never tap a single score without this repair.
+    // Both repair the same way deleteRound() already does for the local-delete case: fall back
+    // to the first remaining category, since there's no "the marker used to be right here"
+    // position to prefer a neighbour from in either case here.
+    if(CATEGORY_LABELS[state.modeId]){
+      var stillHasActiveMarker=state.activeMarkerId&&state.rounds.some(function(r){return r.marker&&r.id===state.activeMarkerId;});
+      if(!stillHasActiveMarker){
+        var remainingSegs=buildSegments().completed;
+        state.activeMarkerId=remainingSegs.length?remainingSegs[0].markerId:null;
+      }
+    }
+    // Deliberately NOT clearing pendingRestoreQueue here -- it's local-only UI state (a removal
+    // isn't itself synced, only its effect on state.players/state.rounds is), and this function
+    // runs on essentially every remote update while connected, including echoes of the local
+    // device's own writes. Clearing it unconditionally meant "Restore <player>" could vanish
+    // within about a second of removing someone, often before the user had a chance to tap it.
     document.body.setAttribute("data-scoremode",state.scoreMode);
     // Only touch inputs the user isn't actively typing in -- a remote update landing mid-keystroke
     // shouldn't yank focus or overwrite what they're about to type (same rule updateCurrentRow
     // already follows for the round table's live cell inputs).
     if(document.activeElement!==gameNameEl)gameNameEl.value=state.gameName;
-    if(document.activeElement!==targetEl)targetEl.value=state.targetScore;
+    if(document.activeElement!==targetEl){targetEl.value=state.targetScore;trackValidTarget();}
     save();
     cloud.applyingRemote=false;
-    renderAll();
-    syncModeMenu();syncScoreModeMenu();syncTargetLabel();syncShareUI();
+    // The common case -- someone else's tap or a value-only edit -- never changes who's playing
+    // or their order, so patch each player's name/colour in place instead of tearing down and
+    // rebuilding every card (renderCards()) just to redraw content that hasn't moved.
+    if(playersStructureUnchanged){
+      state.players.forEach(patchPlayerFields);
+      renderSheet();refreshDynamic();
+    } else {
+      renderAll();
+    }
+    syncModeMenu();syncScoreModeMenu();syncDisplayToggles();syncTargetLabel();syncShareUI();
   }
   function connectCloud(code,seeding){
     cloud.code=code;
     cloud.seeding=!!seeding;
     cloud.keyMap={};cloud.valueCache={};cloud.playerCache={};cloud.lastMeta=null;
+    cloud.pendingMeta={};cloud.pendingPlayerWrites={};cloud.pendingRoundWrites={};
+    cloud.isSeedMirror=false;cloud.seedPending=0;
     state.gameCode=code;
     if(cloud.unsub){cloud.unsub();cloud.unsub=null;}
     cloud.unsub=FB.onValue(cloudGameRef(code),function(snap){
@@ -2380,6 +2737,13 @@
         return;
       }
       if(cloud.seedPending>0)return;
+      // Same validation as the seeding branch above, joinSharedGame, and the reconnect-on-load
+      // peek: an empty/null snapshot here means the whole games/<code> node is gone (e.g. an
+      // external cleanup script removing old abandoned games, per the createdAt comment on
+      // startSharedGame) -- not "everyone left and there's nothing to show." Without this check,
+      // applyCloudSnapshot(null) would happily rebuild state.players/state.rounds from nothing
+      // and save() that empty state straight over the local copy of the game.
+      if(!val||!(val.players||val.rounds||val.meta)){leaveSharedGame();return;}
       applyCloudSnapshot(val);
     },function(err){console.error("Scorepad cloud sync error",err);});
     if(!cloud.unsubConn){
@@ -2454,6 +2818,24 @@
       prompt("Copy this code:",cloud.code);
     }
   }
+  // The URL a scanned QR code opens: the app's own address plus the share code as a query
+  // param, picked up by the ?join= handling below. Not the raw code alone -- scanning it should
+  // land someone straight on the join screen with the code already filled in, not just show them
+  // six characters they then have to type in by hand, which would barely beat reading the code
+  // off the screen and typing that.
+  function shareJoinUrl(){return location.origin+location.pathname+"?join="+cloud.code;}
+  function renderShareQR(){
+    var el=document.getElementById("share-qr");
+    if(!el)return;
+    // qrcode is the embedded generator (see the <script> block right before this file's main
+    // script tag) -- guarded rather than assumed, same defensive spirit as every other place this
+    // codebase treats an optional capability as "just don't show that bit" instead of throwing.
+    if(!cloud.code||typeof qrcode==="undefined"){el.innerHTML="";return;}
+    var q=qrcode(0,"M");
+    q.addData(shareJoinUrl());
+    q.make();
+    el.innerHTML=q.createSvgTag({scalable:true,margin:2});
+  }
   function syncShareUI(){
     var connected=!!cloud.code;
     document.querySelectorAll(".share-when-off").forEach(function(el){el.hidden=connected;});
@@ -2463,6 +2845,7 @@
     document.querySelectorAll(".share-status-dot").forEach(function(el){el.classList.toggle("live",connected&&cloud.connected);});
     document.querySelectorAll(".share-status-text").forEach(function(el){el.textContent=connected?(cloud.connected?"Live":"Connecting…"):"";});
     if(connected)document.querySelectorAll(".share-code-text").forEach(function(el){el.textContent=cloud.code;});
+    renderShareQR();
   }
   document.getElementById("share-start-btn").addEventListener("click",startSharedGame);
   document.getElementById("share-join-btn").addEventListener("click",openJoinGame);
@@ -2497,7 +2880,20 @@
 
   buildThemeMenu();buildModeMenu();buildScoreModeMenu();applyTheme(currentTheme);syncDisplayToggles();syncTargetLabel();applyScoreMode(state.scoreMode);
   syncShareUI();
-  if(!state.seenGuide)openGuide();
+  // Landing here from a scanned share QR (see shareJoinUrl()/renderShareQR() above): prefill the
+  // join screen with the code straight away rather than waiting on firebase-ready, since opening
+  // the overlay and filling the input is pure UI -- joinSharedGame() itself already guards on FB
+  // not being ready yet when the person actually taps "Join". Stripped from the URL immediately
+  // so reloading or reopening this page later doesn't reopen the join screen every time.
+  var joinCodeFromUrl=null;
+  try{joinCodeFromUrl=new URLSearchParams(location.search).get("join");}catch(e){}
+  if(joinCodeFromUrl){
+    history.replaceState(null,"",location.pathname+location.hash);
+    openJoinGame();
+    var joinInput=document.getElementById("joingame-input");
+    joinInput.value=joinCodeFromUrl.trim().toUpperCase().slice(0,6);
+    joinInput.select();
+  } else if(!state.seenGuide){openGuide();}
 })();
 </script>
 </body>
