@@ -1719,12 +1719,26 @@
   // ---- cards ----
   function renderCards(){
     // A remote sync update landing mid-keystroke would otherwise tear down and rebuild every
-    // card -- including the one the user is typing a name into -- which on mobile dismisses
-    // the on-screen keyboard after every letter. Skip the rebuild entirely while a name field
-    // has focus; the next render once it's blurred picks up anything that changed meanwhile.
-    if(document.activeElement&&document.activeElement.classList&&document.activeElement.classList.contains("pname")&&cardsEl.contains(document.activeElement))return;
-    cardsEl.innerHTML="";
+    // card -- including the one the user is typing a name into -- which on mobile dismisses the
+    // on-screen keyboard after every letter. Every OTHER tile still gets rebuilt fresh as normal;
+    // the one currently being typed into is left completely alone, in place, in the live
+    // document the whole time -- staging it through a detached DocumentFragment (even briefly,
+    // even mid-reparent) was tried and blurred it anyway, since a fragment isn't part of the
+    // rendered document and moving a focused element into one counts as removing it.
+    var focusedInput=document.activeElement;
+    var preserveTile=null,preservePid=null;
+    if(focusedInput&&focusedInput.classList&&focusedInput.classList.contains("pname")&&cardsEl.contains(focusedInput)){
+      preserveTile=focusedInput.closest(".tile");
+      if(preserveTile)preservePid=preserveTile.getAttribute("data-pid");
+    }
+    Array.prototype.slice.call(cardsEl.children).forEach(function(ch){
+      if(ch!==preserveTile)cardsEl.removeChild(ch);
+    });
+    var beforeFrag=document.createDocumentFragment(),afterFrag=document.createDocumentFragment();
+    var pastPreserved=!preserveTile;
     state.players.forEach(function(pl){
+      if(preserveTile&&pl.id===preservePid){pastPreserved=true;return;}
+      var frag=pastPreserved?afterFrag:beforeFrag;
       var tile=document.createElement("div");tile.className="tile";tile.setAttribute("data-pid",pl.id);tile.style.setProperty("--pc",pl.color);
       var card=document.createElement("div");card.className="card";card.setAttribute("data-pid",pl.id);
       card.innerHTML=
@@ -1734,6 +1748,17 @@
         '<span class="reached-pill">target reached</span>';
       card.querySelector(".pname").value=pl.name;
       card.querySelector(".pname").addEventListener("input",function(e){pl.name=e.target.value;var h=sheetEl.querySelector('[data-head="'+pl.id+'"] .htext');if(h)h.textContent=e.target.value||"—";save();});
+      // While this field has focus, renderCards() deliberately leaves its tile untouched so a
+      // sync update landing mid-keystroke can't yank focus away. That can leave the input
+      // showing stale text once the user stops editing, if a remote edit to this same player
+      // (e.g. another device renaming the same slot) arrived and updated state.players while
+      // this field was still focused. Blurring is the natural moment to catch up -- but only by
+      // re-syncing this one input's own value in place, not a full renderAll(): that would
+      // rebuild every other tile too, including any sibling tile another in-flight interaction
+      // (e.g. focusing the next field) is mid-way through touching.
+      card.querySelector(".pname").addEventListener("blur",function(e){
+        if(e.target.value!==pl.name)e.target.value=pl.name;
+      });
       card.querySelector(".pdot").addEventListener("click",function(e){e.stopPropagation();openColorPicker(pl,e.currentTarget);});
       card.querySelector(".remove").addEventListener("click",function(){
         var idx=state.players.indexOf(pl);
@@ -1752,11 +1777,13 @@
       var badge=document.createElement("span");badge.className="rank-badge";badge.setAttribute("aria-hidden","true");
       tile.appendChild(card);
       tile.appendChild(badge);
-      cardsEl.appendChild(tile);
+      frag.appendChild(tile);
     });
     var add=document.createElement("button");add.className="addplayer";add.textContent="+ Add player";
     add.addEventListener("click",function(){state.players.push({id:uid(),name:"Player "+(state.players.length+1),color:nextColor()});save();renderAll();var inputs=cardsEl.querySelectorAll(".pname");var last=inputs[inputs.length-1];if(last){last.focus();last.select();}});
-    cardsEl.appendChild(add);
+    afterFrag.appendChild(add);
+    cardsEl.insertBefore(beforeFrag,preserveTile);
+    cardsEl.appendChild(afterFrag);
   }
 
   function setSegmentValue(markerId,pid,raw){
@@ -2203,26 +2230,28 @@
   // doesn't reliably preserve the array order of non-numeric keys.
   var CLOUD_META_FIELDS=["gameName","targetScore","scoreMode","keypadType","modeId","countdown"];
   var FB=null;
-  var cloud={code:null,connected:false,seeding:false,applyingRemote:false,keyMap:{},valueCache:{},playerCache:{},lastMeta:null,unsub:null,unsubConn:null,pendingWrites:0,pendingVal:undefined};
+  var cloud={code:null,connected:false,seeding:false,isSeedMirror:false,seedPending:0,applyingRemote:false,keyMap:{},valueCache:{},playerCache:{},lastMeta:null,unsub:null,unsubConn:null};
 
   function cloudGameRef(code){return FB.child(FB.ref(FB.db),"games/"+code);}
-  // A cloudMirror() call can touch several children (meta + N players + M rounds) with
-  // separate FB.set/push calls. Firebase echoes each one back through onValue as soon as its
-  // own local write lands -- often well before the others finish -- so the listener would
-  // otherwise see a string of partial snapshots (e.g. meta with no players yet) and blindly
-  // apply them as if they were authoritative remote state, wiping out players/rounds we just
-  // wrote a moment ago. Tracking outstanding writes lets the onValue handler hold off applying
-  // anything until our own mirror-out has fully landed, then apply whatever the latest snapshot
-  // turned out to be (which may include a genuine concurrent edit from another device).
+  // Starting/joining a brand-new empty game triggers ONE initial cloudMirror() that seeds every
+  // child at once (meta + every player + every round) via separate FB.set/push calls. Firebase
+  // echoes each of those back through onValue as soon as its own write lands -- often well before
+  // the others finish -- so the listener would otherwise see a string of partial snapshots (e.g.
+  // meta with no players yet) and blindly apply them as authoritative remote state, wiping out
+  // the very players/rounds we just wrote a moment ago (this is what "sharing resets the game"
+  // was). Tracking that specific seed burst lets the onValue handler drop echoes of it until it's
+  // fully landed. This is deliberately scoped to ONLY the initial seed mirror, not to every
+  // ordinary edit's mirror-out during normal shared play: an earlier version gated ALL snapshots
+  // on ANY outstanding write, which sounds safer but isn't -- two devices editing different
+  // players at once each have their own perpetually-refilling trickle of outstanding writes, and
+  // gating on that starved each device of the other's edits (see test-player-sync-hardening.js).
+  // A single multi-field burst only ever happens at seed time; every other mirror-out touches at
+  // most the handful of fields that actually changed, so there's no analogous partial-echo risk
+  // to guard against there.
   function trackWrite(thenable){
-    cloud.pendingWrites++;
-    var settle=function(){
-      cloud.pendingWrites--;
-      if(cloud.pendingWrites<=0&&cloud.pendingVal!==undefined){
-        var v=cloud.pendingVal;cloud.pendingVal=undefined;
-        applyCloudSnapshot(v);
-      }
-    };
+    if(cloud.isSeedMirror)cloud.seedPending++;
+    var seeded=cloud.isSeedMirror;
+    var settle=function(){if(seeded)cloud.seedPending--;};
     if(thenable&&typeof thenable.then==="function")thenable.then(settle,settle);
     else settle();
   }
@@ -2329,10 +2358,14 @@
       if(cloud.seeding){
         cloud.seeding=false;
         if(val&&(val.players||val.rounds||val.meta)){applyCloudSnapshot(val);}
-        else{cloudMirror();}
+        else{
+          cloud.isSeedMirror=true;
+          cloudMirror();
+          cloud.isSeedMirror=false;
+        }
         return;
       }
-      if(cloud.pendingWrites>0){cloud.pendingVal=val;return;}
+      if(cloud.seedPending>0)return;
       applyCloudSnapshot(val);
     },function(err){console.error("Scorepad cloud sync error",err);});
     if(!cloud.unsubConn){
