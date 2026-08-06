@@ -2435,7 +2435,7 @@
   // winners for the same scores.
   var CLOUD_META_FIELDS=["gameName","targetScore","scoreMode","keypadType","modeId","countdown","lowestWins"];
   var FB=null;
-  var cloud={code:null,connected:false,seeding:false,isSeedMirror:false,seedPending:0,applyingRemote:false,keyMap:{},valueCache:{},playerCache:{},lastMeta:null,unsub:null,unsubConn:null,pendingMeta:{},pendingPlayerWrites:{},pendingRoundWrites:{}};
+  var cloud={code:null,connected:false,seeding:false,isSeedMirror:false,seedPending:0,applyingRemote:false,mirroring:false,keyMap:{},valueCache:{},playerCache:{},lastMeta:null,unsub:null,unsubConn:null,pendingMeta:{},pendingPlayerWrites:{},pendingRoundWrites:{}};
 
   function cloudGameRef(code){return FB.child(FB.ref(FB.db),"games/"+code);}
   // Every write to Firebase echoes straight back through this same onValue listener once it
@@ -2485,11 +2485,32 @@
       else settle();
     };
   }
+  // cloud.mirroring brackets each cloudMirror() call for its own synchronous duration only (set
+  // true here, false again a few lines down -- nothing async happens in between). This exists
+  // because Firebase's local optimistic cache means FB.set()/FB.push() can re-fire THIS SAME
+  // onValue listener synchronously, before cloudMirror() has even reached its later statements --
+  // e.g. cloudMirrorMeta()'s single write for a mode switch can echo back (reflecting the new
+  // modeId but zero rounds) before cloudMirrorRounds() has pushed a single one of the freshly
+  // seeded category rows. That reentrant snapshot sails straight through the existing
+  // per-field pending-write checks, since cloudMirrorRounds() hasn't registered anything in
+  // cloud.pendingRoundWrites yet -- so applyCloudSnapshot() faithfully reconstructs state.rounds
+  // from the (at that instant, genuinely empty) snapshot and wipes the seeded rows before they're
+  // ever written. The ongoing onValue handler below skips any snapshot that arrives while
+  // cloud.mirroring is true, which only ever happens for this kind of same-tick self-echo --
+  // a real remote update, or the eventual settled echo of our own write, can only arrive after
+  // this synchronous block has already finished and cloud.mirroring is back to false.
+  // Deliberately NOT cloud.isSeedMirror/seedPending here -- those gate on writes actually
+  // SETTLING (async, can span a full network round trip), which is right for the one-time
+  // initial connect burst but would starve OTHER devices' concurrent edits if left on across
+  // ordinary play (see the comment above beginEntityWrite()). This only needs to cover the
+  // synchronous window where cloudMirror()'s own later statements haven't run yet.
   function cloudMirror(){
-    if(!FB||!cloud.code||cloud.applyingRemote)return;
+    if(!FB||!cloud.code||cloud.applyingRemote||cloud.mirroring)return;
+    cloud.mirroring=true;
     cloudMirrorMeta();
     cloudMirrorPlayers();
     cloudMirrorRounds();
+    cloud.mirroring=false;
   }
   function cloudMetaSnapshot(){
     var meta={};
@@ -2737,6 +2758,10 @@
         return;
       }
       if(cloud.seedPending>0)return;
+      // See the comment on cloud.mirroring above cloudMirror() -- a snapshot arriving mid-mirror
+      // is a same-tick self-echo of a write burst we haven't finished issuing yet, not a real
+      // update to react to.
+      if(cloud.mirroring)return;
       // Same validation as the seeding branch above, joinSharedGame, and the reconnect-on-load
       // peek: an empty/null snapshot here means the whole games/<code> node is gone (e.g. an
       // external cleanup script removing old abandoned games, per the createdAt comment on
