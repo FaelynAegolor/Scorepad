@@ -3,7 +3,7 @@
 
   # Scorepad<span>.uk</span>
 
-  **A free scorekeeper for board and card games — it does the sums, remembers the rules, and can even sync live across everyone's phones at the table.**
+  **A free scorekeeper for board and card games — it does the sums, remembers the rules, and can even sync live across everyone's phones at the table. No passing the pad required.**
 
   [![Live site](https://img.shields.io/badge/live-scorepad.uk-f4b942?style=for-the-badge&labelColor=1a1226)](https://scorepad.uk)
   [![License](https://img.shields.io/badge/license-GPL--3.0-f4b942?style=for-the-badge&labelColor=1a1226)](LICENSE)
@@ -20,9 +20,10 @@ No app store, no sign-up, no ads, no dice required. Just open it, name your play
 - **Three ways to keep score**
   - **Running score** — tap `−`/`+` beside a player's number to nudge it live, or tap the number itself for a full keypad. A little pill pops up to show your last few taps, so a fat-fingered +50 doesn't go unnoticed.
   - **Round-by-round** — enter each player's score for the hand on their own tile (in any order — the tile darkens once it's in, with a green tick to prove it), then hit **Add round** to lock it in. Round history, running totals, and a gold underline on the leader are all tracked in one shared table — and you can switch freely between running and round-by-round mid-game without losing a single point.
-  - **Category table** (Wingspan, Wyrmspan) — end-game scoring games don't have "rounds" so much as a fixed list of categories to total up. Every category is on the table from the start; a small ▲▼ per row moves which one your taps and keypad entries currently target, so you can fill them in whatever order suits how you're tallying the board.
+  - **Category table** (Wingspan, Wyrmspan, Yahtzee) — end-game scoring games don't have "rounds" so much as a fixed list of categories to total up. Every category is on the table from the start, dice already metaphorically rolled; a small ▲▼ per row moves which one your taps and keypad entries currently target, so you can fill them in whatever order suits how you're tallying the board.
 - **Game presets** — Flip 7, Sushi Go!, Star Realms, and Yu-Gi-Oh! each swap in a custom card/counter picker and sensible starting defaults (health totals, countdown targets, the works), so the app already knows the house rules better than half the table. There's also a generic **Life total** mode for anything else that just needs a shared starting number ticking down.
-- **Play together, live** — share a 6-character code and everyone at the table (or not at the table — it works over the internet too) sees every tap, rename, and round land on their own phone in real time. No accounts, just a code; leave any time and your game quietly reverts to local-only.
+- **Ranking, your way** — most games are highest-score-wins by default, but for the sneaky ones where the *lowest* score takes it — Hearts, Golf, and friends — a one-tap "Lowest score wins" toggle in Scoring options flips the standings, the winner banner, and the leader glow to match. No mental subtraction required.
+- **Play together, live** — share a 6-character code, or let someone scan a QR code straight to the join screen (no typing, no squinting at a tiny code across the table), and everyone sees every tap, rename, and round land on their own phone in real time — at the table or across the internet. No accounts, just a code; leave any time and your game quietly reverts to local-only.
 - **Player colours** — everyone gets their own hue from an 8-colour palette, and the current leader's tile gets a properly smug 3D glow.
 - **Six themes** — Faelyn, Martha, Blaugen, Tarquin, Sleevey Barry, and Boo-bees, each with its own fonts, palette, and background treatment rather than just a colour swap. Pick your table's mood.
 - **A proper finish** — a winner screen with confetti, ranked standings, a "Share results" button, and a "Save as image" button that renders a branded PNG for the group chat.
@@ -50,13 +51,15 @@ Scorepad/
 
 **Scoring model.** Every game is stored as one flat, chronological ledger (`state.rounds`) — score entries and round-boundary markers interleaved in a single array, rather than separate "rounds" and "totals" structures kept in sync by hand. Round-by-round display, running totals, and category tables are all just different ways of reading the same ledger, which is what lets you switch scoring modes mid-game, undo cleanly, and edit any past entry without the rest of the game's math drifting out of sync.
 
-**Live sync.** "Play together" is backed by a Firebase Realtime Database. Players and round entries sync as individually-diffed children rather than one big object overwrite, so two people editing different things at the same moment (everyone tapping their own score at once, say) don't stomp on each other — only a genuine edit to the *same* field ever has to pick a winner. Everything you enter offline still lands in your browser's local storage first; syncing is a mirror on top, not a replacement for it.
+**Live sync.** "Play together" is backed by a Firebase Realtime Database. Players and round entries sync as individually-diffed children rather than one big object overwrite, so two people editing different things at the same moment (everyone tapping their own score at once, say) don't stomp on each other — only a genuine edit to the *same* field ever has to pick a winner. Each in-flight write is tracked per field, so an older echo can never regress a newer local edit while it's still settling — necessary because Firebase's local cache can echo a write straight back to the same tab that just made it, sometimes mid-way through a bigger change (seeding a fresh Wingspan scoresheet's nine categories, say) and before the rest of it has gone out; a small reentrancy guard makes sure a same-tab echo like that is never mistaken for the new source of truth until the whole change has actually finished sending. Everything you enter offline still lands in your browser's local storage first; syncing is a mirror on top, not a replacement for it.
+
+**QR codes, no CDN.** The QR generator behind "Play together" is vendored straight into `index.html` rather than pulled from a CDN at request time — the app is meant to work fully offline via its service worker, and a third-party script tag would quietly break that promise on exactly the trip where there's no signal to fall back on.
 
 **No React, no framework.** Rendering is plain DOM manipulation (`createElement`, template strings, event listeners) — deliberately, to keep the "open one file, read the whole app" property that makes a project like this easy to poke at and extend without a build pipeline getting in the way.
 
 ## Got a game to suggest?
 
-Scorepad's preset list is short on purpose — every game gets built properly or not at all. If there's a game you'd love to see with its own keypad and rules baked in, [send a suggestion](mailto:hello@scorepad.uk?subject=Game%20suggestion) — there's a shortcut for it right in the app's menu too.
+Scorepad's preset list is short on purpose — every game gets built properly or not at all, no half-built houses (of cards) here. If there's a game you'd love to see with its own keypad and rules baked in, [send a suggestion](mailto:hello@scorepad.uk?subject=Game%20suggestion) — there's a shortcut for it right in the app's menu too.
 
 ## The rulebook (license)
 
