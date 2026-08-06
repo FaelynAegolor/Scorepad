@@ -3,9 +3,44 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Scorepad.uk — board game scorekeeper</title>
-<meta name="description" content="A free, offline scorekeeper for board and card games.">
+<title>Scorepad.uk — Free Board & Card Game Scorekeeper</title>
+<meta name="description" content="Free scorekeeper for board and card games — running totals, round tables, and life-total countdowns, with live sync across everyone's phones. No sign-up.">
+<link rel="canonical" href="https://scorepad.uk/">
 <meta name="theme-color" content="#1a1226">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://scorepad.uk/">
+<meta property="og:site_name" content="Scorepad.uk">
+<meta property="og:title" content="Scorepad.uk — Free Board & Card Game Scorekeeper">
+<meta property="og:description" content="Free scorekeeper for board and card games — running totals, round tables, and life-total countdowns, with live sync across everyone's phones. No sign-up.">
+<meta property="og:image" content="https://scorepad.uk/icon-512.png">
+<meta property="og:image:width" content="512">
+<meta property="og:image:height" content="512">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Scorepad.uk — Free Board & Card Game Scorekeeper">
+<meta name="twitter:description" content="Free scorekeeper for board and card games — running totals, round tables, and life-total countdowns, with live sync across everyone's phones. No sign-up.">
+<meta name="twitter:image" content="https://scorepad.uk/icon-512.png">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Scorepad.uk",
+  "url": "https://scorepad.uk/",
+  "description": "Free scorekeeper for board and card games. Running totals, round-by-round tables, and life-total countdowns, with live score sync across everyone's phones.",
+  "applicationCategory": "GameApplication",
+  "operatingSystem": "Any (web-based)",
+  "browserRequirements": "Requires JavaScript",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "featureList": [
+    "Running score and round-by-round scoring",
+    "Category-table presets for Wingspan, Wyrmspan, and Yahtzee",
+    "Life-total countdown for Star Realms and Yu-Gi-Oh",
+    "Live score sync across devices via a share code or QR code",
+    "Works offline, installable as an app"
+  ]
+}
+</script>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "955b2233432b4ce08e544fca69ad66dc"}'></script><!-- End Cloudflare Web Analytics -->
 <script type="module">
   // Bridges the Firebase modular SDK (ES module, CDN-hosted, no build step) into
@@ -271,6 +306,18 @@
   .rowmove{border:none;background:transparent;color:var(--ink-soft);opacity:.5;cursor:pointer;font-size:8px;line-height:1;padding:1px 3px;border-radius:3px;transition:.15s}
   .rowmove:hover:not(:disabled){color:var(--accent-press);opacity:1}
   .rowmove:disabled{opacity:.15;cursor:default}
+  /* Category-table mode: the whole label cell is a tap target for "make this category active" --
+     the ▲▼ buttons alone are a small, fiddly target on a phone. Placed after the alternating-row
+     and current-row background rules in source order so this wins any specificity tie against
+     them, same reasoning as the totalcell-lab fix above. */
+  .rndcell-tappable{cursor:pointer}
+  .rndcell-tappable:hover{background:color-mix(in srgb,var(--accent) 8%,var(--paper))}
+  .rndcell-tappable:active{background:color-mix(in srgb,var(--accent) 15%,var(--paper))}
+  /* Plain rounds mode: the label itself is the rename target -- a dashed underline hints it's
+     editable without adding a separate icon/button crowding an already tight cell. */
+  .rlab-text{cursor:pointer;border-bottom:1px dashed var(--paper-line);padding-bottom:1px}
+  .rlab-text:hover{border-bottom-color:var(--accent)}
+  .rlab-edit{font-family:var(--font-mono);font-weight:700;font-size:13px;color:var(--ink);background:var(--paper2);border:1px solid var(--accent);border-radius:5px;padding:1px 6px;width:110px;max-width:40vw}
   .scoreinput{width:100%;min-width:64px;border:none;background:transparent;text-align:center;font-family:var(--font-mono);font-weight:700;font-size:17px;color:var(--ink);padding:14px 6px;font-variant-numeric:tabular-nums;-moz-appearance:textfield}
   .scoreinput::placeholder{color:var(--ink-soft);opacity:.45;font-weight:400}
   .scoreinput:focus{outline:none;background:color-mix(in srgb,var(--accent) 12%,transparent)}
@@ -2084,14 +2131,18 @@
     var has=Object.prototype.hasOwnProperty.call(seg.scores,playerId);
     return{has:has,val:has?seg.scores[playerId]:0};
   }
+  function setActiveCategory(markerId){
+    if(!markerId||markerId===state.activeMarkerId)return;
+    state.activeMarkerId=markerId;
+    save();renderAll();
+  }
   function moveActiveCategory(dir){
     var segs=buildSegments().completed;
     var idx=segs.findIndex(function(s){return s.markerId===state.activeMarkerId;});
     if(idx<0)return;
     var newIdx=idx+dir;
     if(newIdx<0||newIdx>=segs.length)return;
-    state.activeMarkerId=segs[newIdx].markerId;
-    save();renderAll();
+    setActiveCategory(segs[newIdx].markerId);
   }
 
   function renderSheet(){
@@ -2113,7 +2164,16 @@
       var isActive=isCategoryMode&&seg.markerId===state.activeMarkerId;
       var activeHtml=isActive?
         '<span class="rowmove-group"><button class="rowmove up" data-move-active-up '+(idx===0?"disabled":"")+' aria-label="Make previous category active">▲</button><button class="rowmove down" data-move-active-down '+(idx===completed.length-1?"disabled":"")+' aria-label="Make next category active">▼</button></span>':"";
-      html+='<tr class="'+(isActive?"rnd-current-row":"")+'" data-marker="'+seg.markerId+'"><td class="rndcell"><span class="rlab">'+activeHtml+'<button class="delrnd" data-del="'+seg.markerId+'" title="Delete round" aria-label="Delete round">×</button>'+esc(seg.category||roundLabel(idx))+(isActive?'<span class="rnd-current-tag">now</span>':'')+'</span></td>';
+      // Category mode: the whole cell is a tap target for "make this the active category" (see
+      // the click wiring below) -- the ▲▼ buttons alone were a small, fiddly target on a phone.
+      // Plain rounds mode has no such concept, but gets its own affordance instead: the label
+      // itself is editable, reusing the same `category` field category-table rows already use to
+      // stamp a custom name onto a marker, so a renamed round just needs no special handling
+      // anywhere else -- esc(seg.category||roundLabel(idx)) already prefers it over the generic
+      // "R1" fallback.
+      var labelHtml=isCategoryMode?esc(seg.category||roundLabel(idx)):
+        '<span class="rlab-text" data-marker="'+seg.markerId+'" tabindex="0" title="Tap to rename this round">'+esc(seg.category||roundLabel(idx))+'</span>';
+      html+='<tr class="'+(isActive?"rnd-current-row":"")+'" data-marker="'+seg.markerId+'"><td class="rndcell'+(isCategoryMode?" rndcell-tappable":"")+'"><span class="rlab">'+activeHtml+'<button class="delrnd" data-del="'+seg.markerId+'" title="Delete round" aria-label="Delete round">×</button>'+labelHtml+(isActive?'<span class="rnd-current-tag">now</span>':'')+'</span></td>';
       state.players.forEach(function(pl){var v=seg.scores[pl.id];var val=(typeof v==="number"&&!isNaN(v))?v:"";html+='<td data-cell="'+seg.markerId+'|'+pl.id+'"><div class="cell-adj">'+
         '<button class="adjbtn small minus" data-r="'+seg.markerId+'" data-p="'+pl.id+'" aria-label="Subtract 1">−</button>'+
         '<input class="scoreinput" inputmode="numeric" type="number" step="1" data-r="'+seg.markerId+'" data-p="'+pl.id+'" value="'+val+'" placeholder="0" aria-label="Score">'+
@@ -2182,6 +2242,54 @@
     });});
     sheetEl.querySelectorAll("[data-move-active-up]").forEach(function(btn){btn.addEventListener("click",function(){moveActiveCategory(-1);});});
     sheetEl.querySelectorAll("[data-move-active-down]").forEach(function(btn){btn.addEventListener("click",function(){moveActiveCategory(1);});});
+    if(isCategoryMode){
+      sheetEl.querySelectorAll(".rndcell-tappable").forEach(function(td){
+        td.addEventListener("click",function(e){
+          // The delete/move buttons live inside this same cell -- let their own listeners handle
+          // a tap on them rather than ALSO reacting here (a click on a nested button bubbles up
+          // to this cell's listener too, same event).
+          if(e.target.closest(".delrnd")||e.target.closest(".rowmove"))return;
+          var tr=td.closest("tr");
+          setActiveCategory(tr&&tr.getAttribute("data-marker"));
+        });
+      });
+    } else {
+      sheetEl.querySelectorAll(".rlab-text").forEach(function(span){
+        span.addEventListener("click",function(){startEditingRoundLabel(span);});
+        span.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();startEditingRoundLabel(span);}});
+      });
+    }
+  }
+  // Swaps a round's label span for a text input pre-filled with its current name, saving on
+  // blur/Enter -- reuses the same `category` field category-table markers already carry (see
+  // labelHtml above), so a renamed plain round needs no separate storage or display handling.
+  // An empty value clears the field entirely rather than storing "", falling back to the
+  // generic "R1"-style label the same as a round that was never renamed.
+  function startEditingRoundLabel(span){
+    var markerId=span.getAttribute("data-marker");
+    var original=span.textContent;
+    var input=document.createElement("input");
+    input.className="rlab-edit";
+    input.maxLength=40;
+    input.value=original;
+    span.replaceWith(input);
+    input.focus();input.select();
+    var done=false;
+    function commit(){
+      if(done)return;done=true;
+      var val=input.value.trim();
+      var idx=state.rounds.findIndex(function(e){return e.id===markerId;});
+      if(idx>=0){
+        if(val)state.rounds[idx].category=val;else delete state.rounds[idx].category;
+        save();
+      }
+      renderSheet();refreshDynamic();
+    }
+    input.addEventListener("blur",commit);
+    input.addEventListener("keydown",function(e){
+      if(e.key==="Enter"){e.preventDefault();input.blur();}
+      else if(e.key==="Escape"){e.preventDefault();done=true;renderSheet();refreshDynamic();}
+    });
   }
 
   function markTopScorers(segs){
