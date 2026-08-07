@@ -185,6 +185,11 @@
   .ios-toggle[aria-pressed="true"] .ios-toggle-dot{transform:translateX(18px)}
   .menu-new{width:100%;display:block;text-align:center;text-decoration:none;background:transparent;border:1px solid var(--line);border-radius:12px;color:var(--text);font:inherit;font-weight:600;font-size:14px;padding:12px;cursor:pointer;transition:.15s;box-sizing:border-box}
   .menu-new+.menu-new{margin-top:8px}
+  /* Left-aligned label + explanatory subtitle, for menu actions where "what exactly does this
+     clear" isn't obvious from a one-word button alone (Reset game vs. Reset everything). */
+  .menu-new-desc{text-align:left}
+  .menu-new-desc b{display:block;font-weight:600;font-size:14px}
+  .menu-new-desc small{display:block;color:var(--muted);font-size:12px;font-weight:400;margin-top:2px}
   .menu-new:hover{border-color:var(--accent);color:var(--accent)}
   .menu-note{font-size:12px;color:var(--muted);text-align:center;line-height:1.5;margin:14px 4px 10px}
   .menu-reset{color:#ef4444;border-color:color-mix(in srgb,#ef4444 35%,var(--line))}
@@ -636,9 +641,6 @@
       <button class="menubtn" id="gamemodebtn" aria-label="Toggle game mode" aria-pressed="false" title="Game mode — full-screen layout for play">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
       </button>
-      <button class="menubtn" id="newgamebtn" aria-label="Start new game" title="Start new game">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-      </button>
       <div class="menu-wrap">
         <button class="menubtn" id="menubtn" aria-label="Open menu" aria-haspopup="true" aria-expanded="false">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h11M4 12h16M9 18h11"/><circle cx="18" cy="6" r="2" fill="currentColor" stroke="none"/><circle cx="5" cy="12" r="2" fill="currentColor" stroke="none"/><circle cx="15" cy="18" r="2" fill="currentColor" stroke="none"/></svg>
@@ -653,7 +655,7 @@
           </div>
           <div class="menu-sec">
             <button class="menu-new" id="menu-guide">Show guide</button>
-            <button class="menu-new" id="menu-new">Start new game</button>
+            <button class="menu-new menu-new-desc" id="menu-new"><b>Reset game</b><small>Clears scores and rounds — keeps your players and game type</small></button>
             <button class="menu-new" id="menu-install" hidden>Install app</button>
           </div>
           <div class="menu-sec">
@@ -664,7 +666,7 @@
             </a>
           </div>
           <div class="menu-sec">
-            <button class="menu-new menu-reset" id="menu-reset">Reset everything</button>
+            <button class="menu-new menu-reset menu-new-desc" id="menu-reset"><b>Reset everything</b><small>Clears players, scores, rounds, and game type — starts completely fresh</small></button>
           </div>
           <div class="version-tag">Scorepad v2026-08-06.1</div>
         </div>
@@ -1468,13 +1470,12 @@
   function clearPendingRestore(){if(pendingRestoreQueue.length){pendingRestoreQueue=[];refreshDynamic();}}
 
   function startNewGame(skipConfirm){
-    if(!skipConfirm&&state.rounds.length&&!confirm("Start a new game? This clears all rounds but keeps your players."))return;
+    if(!skipConfirm&&state.rounds.length&&!confirm("Reset game? This clears all rounds and scores, but keeps your players and game type."))return;
     state.rounds=[];state.activeMarkerId=null;
     seedCategories(state.modeId);
     save();renderAll();clearPendingRestore();
   }
   document.getElementById("menu-new").addEventListener("click",function(){startNewGame();closeMenu();});
-  document.getElementById("newgamebtn").addEventListener("click",startNewGame);
 
   // ---- game mode: a slimmed, big-tile layout for at-the-table play (see CSS for what it hides) ----
   var GAMEMODE_MAXIMIZE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>';
@@ -2017,9 +2018,18 @@
       });
       card.querySelector(".pdot").addEventListener("click",function(e){e.stopPropagation();openColorPicker(pl,e.currentTarget);});
       card.querySelector(".remove").addEventListener("click",function(){
-        var idx=state.players.indexOf(pl);
         var savedScores={};
         state.rounds.forEach(function(r){if(!r.marker&&r.scores[pl.id]!==undefined)savedScores[r.id]=r.scores[pl.id];});
+        var who=pl.name||"this player";
+        var msg=Object.keys(savedScores).length?"Remove "+who+" and their scores?":"Remove "+who+"?";
+        if(!confirm(msg))return;
+        // Belt and suspenders: confirm before removing (this was here originally, then dropped
+        // as an unintended side effect of adding the restore queue below -- restored since the
+        // queue is a recovery net for a change of mind AFTER removing, not a substitute for
+        // asking first). idx is read here, right before the actual removal, rather than at the
+        // top of the handler -- confirm() blocks, and another remove could in principle land
+        // while this dialog is open, which would make an idx captured earlier stale.
+        var idx=state.players.indexOf(pl);
         pendingRestoreQueue.push({player:pl,index:idx,scores:savedScores});
         state.players=state.players.filter(function(x){return x.id!==pl.id;});
         state.rounds.forEach(function(r){if(!r.marker)delete r.scores[pl.id];});
