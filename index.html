@@ -187,9 +187,17 @@
   .menu-new+.menu-new{margin-top:8px}
   /* Left-aligned label + explanatory subtitle, for menu actions where "what exactly does this
      clear" isn't obvious from a one-word button alone (Reset game vs. Reset everything). */
-  .menu-new-desc{text-align:left}
+  .menu-new-desc{text-align:center}
   .menu-new-desc b{display:block;font-weight:600;font-size:14px}
   .menu-new-desc small{display:block;color:var(--muted);font-size:12px;font-weight:400;margin-top:2px}
+  .setup-row{display:flex;align-items:stretch;gap:6px}
+  .setup-row+.setup-row{margin-top:8px}
+  .setup-load{flex:1;min-width:0;text-align:left;background:transparent;border:1px solid var(--line);border-radius:12px;color:var(--text);font:inherit;padding:10px 12px;cursor:pointer;transition:.15s;box-sizing:border-box}
+  .setup-load:hover{border-color:var(--accent)}
+  .setup-load b{display:block;font-weight:600;font-size:14px}
+  .setup-load small{display:block;color:var(--muted);font-size:12px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .setup-del{flex:none;width:38px;border:1px solid var(--line);background:transparent;color:var(--ink-soft);border-radius:12px;cursor:pointer;font-size:16px;line-height:1;transition:.15s}
+  .setup-del:hover{border-color:#ef4444;color:#ef4444}
   .menu-new:hover{border-color:var(--accent);color:var(--accent)}
   .menu-note{font-size:12px;color:var(--muted);text-align:center;line-height:1.5;margin:14px 4px 10px}
   .menu-reset{color:#ef4444;border-color:color-mix(in srgb,#ef4444 35%,var(--line))}
@@ -652,10 +660,10 @@
             <button class="menu-cat" data-panel="game">Game Presets<span class="menu-cat-chevron">›</span></button>
             <button class="menu-cat" data-panel="share">Play together<span class="menu-cat-status share-when-on" hidden><span class="share-status-dot" aria-hidden="true"></span><span class="share-status-text"></span></span><span class="menu-cat-chevron">›</span></button>
             <button class="menu-cat" data-panel="theme">Colour Theme<span class="menu-cat-chevron">›</span></button>
+            <button class="menu-cat" data-panel="setups">Saved setups<span class="menu-cat-chevron">›</span></button>
           </div>
           <div class="menu-sec">
             <button class="menu-new" id="menu-guide">Show guide</button>
-            <button class="menu-new menu-new-desc" id="menu-new"><b>Reset game</b><small>Clears scores and rounds — keeps your players and game type</small></button>
             <button class="menu-new" id="menu-install" hidden>Install app</button>
           </div>
           <div class="menu-sec">
@@ -666,6 +674,7 @@
             </a>
           </div>
           <div class="menu-sec">
+            <button class="menu-new menu-new-desc" id="menu-new"><b>Reset game</b><small>Clears scores and rounds — keeps your players and game type</small></button>
             <button class="menu-new menu-reset menu-new-desc" id="menu-reset"><b>Reset everything</b><small>Clears players, scores, rounds, and game type — starts completely fresh</small></button>
           </div>
           <div class="version-tag">Scorepad v2026-08-06.1</div>
@@ -725,6 +734,16 @@
           <button class="menu-back" data-back>‹ Colour Theme</button>
           <div class="menu-sec" style="margin-top:0;padding-top:0;border-top:none">
             <div class="theme-grid" id="theme-grid"></div>
+          </div>
+        </div>
+        <div class="menu-panel" id="menu-panel-setups" hidden>
+          <button class="menu-back" data-back>‹ Saved setups</button>
+          <div class="menu-sec" style="margin-top:0;padding-top:0;border-top:none">
+            <p class="menu-note" style="margin:0 0 10px">Save your regular group's players (and the game they usually play) so next time it's one tap instead of typing everyone's name in again.</p>
+            <button class="menu-new" id="save-setup-btn">Save current players as a setup</button>
+          </div>
+          <div class="menu-sec">
+            <div id="setups-list"></div>
           </div>
         </div>
       </div>
@@ -939,7 +958,16 @@
   try{localStorage.setItem("__t","1");localStorage.removeItem("__t");}
   catch(e){canStore=false;document.getElementById("warn").style.display="block";}
 
-  var state=load()||{gameName:"",players:[mk("Player 1"),mk("Player 2")],rounds:[],targetScore:"",theme:"felt",scoreMode:"running",keypadType:"standard"};
+  // A genuinely fresh visitor (nothing in localStorage yet) gets a theme matching their device's
+  // own light/dark setting rather than always landing on dark Faelyn regardless of it -- felt and
+  // paper are the two themes' "dark"/"light" defaults. themeCustom stays false so this keeps
+  // tracking the OS setting (see the matchMedia listener below) right up until they actually pick
+  // a theme themselves, at which point that choice sticks for good. ensureShape() defaults
+  // themeCustom to true for anyone loading an EXISTING save, even one that predates this field --
+  // auto-detection is only ever for a first visit, never something that retroactively changes a
+  // theme an existing visitor is already used to seeing.
+  var prefersDarkOnFirstVisit=!!(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches);
+  var state=load()||{gameName:"",players:[mk("Player 1"),mk("Player 2")],rounds:[],targetScore:"",theme:prefersDarkOnFirstVisit?"felt":"paper",themeCustom:false,scoreMode:"running",keypadType:"standard"};
   ensureShape(state);
   var currentTheme=state.theme||"felt";
 
@@ -986,6 +1014,8 @@
     if(typeof s.lowestWins!=="boolean")s.lowestWins=false;
     if(typeof s.countdown!=="boolean")s.countdown=false;
     if(typeof s.gameNameCustom!=="boolean")s.gameNameCustom=false;
+    if(typeof s.themeCustom!=="boolean")s.themeCustom=true;
+    if(!Array.isArray(s.savedSetups))s.savedSetups=[];
     if(typeof s.gameMode!=="boolean")s.gameMode=false;
     // modeId tracks which menu entry is active, separately from keypadType -- multiple modes
     // (Standard and Life total) can share the same generic keypad, so keypadType alone can't
@@ -1135,13 +1165,18 @@
   });
 
   // ---- theme ----
-  function applyTheme(id){
+  // isUserChoice distinguishes an actual tap on a theme swatch from every other caller (initial
+  // boot, and the system-preference listener below) -- only a real tap should ever set
+  // themeCustom, since that's what permanently opts a visitor out of following their OS setting.
+  function applyTheme(id,isUserChoice){
     var t=THEMES[id]||THEMES.felt;currentTheme=id;
     var r=document.documentElement.style;
     Object.keys(VARMAP).forEach(function(k){r.setProperty(VARMAP[k],t.c[k]);});
     r.setProperty("--font-display",t.f.display);r.setProperty("--font-body",t.f.body);r.setProperty("--font-mono",t.f.mono);
     document.body.setAttribute("data-theme",id);
-    state.theme=id;save();syncThemeMenu();
+    state.theme=id;
+    if(isUserChoice)state.themeCustom=true;
+    save();syncThemeMenu();
   }
   function buildThemeMenu(){
     var g=document.getElementById("theme-grid");g.innerHTML="";
@@ -1149,12 +1184,21 @@
       var t=THEMES[id];
       var b=document.createElement("button");b.className="theme-opt";b.setAttribute("data-theme-choice",id);
       b.innerHTML='<span class="theme-sw">'+t.sw.map(function(c){return '<span style="background:'+c+'"></span>';}).join("")+'</span><span class="theme-name">'+t.name+'</span>';
-      b.addEventListener("click",function(){applyTheme(id);});
+      b.addEventListener("click",function(){applyTheme(id,true);});
       g.appendChild(b);
     });
   }
   function syncThemeMenu(){
     document.querySelectorAll(".theme-opt").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-theme-choice")===currentTheme);});
+  }
+  // While themeCustom is still false (never explicitly chosen), keep following the OS setting
+  // live rather than only deciding once at the first-ever visit -- if someone's phone switches
+  // to dark mode at sunset, Scorepad should too, right up until they actually pick a theme.
+  if(window.matchMedia){
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change",function(e){
+      if(state.themeCustom)return;
+      applyTheme(e.matches?"felt":"paper",false);
+    });
   }
   function buildModeMenu(){
     var l=document.getElementById("mode-list");l.innerHTML="";
@@ -1183,22 +1227,13 @@
       if(state.activeMarkerId===null)state.activeMarkerId=mk2.id;
     });
   }
-  function selectMode(id){
+  // Applies a mode's own settings (name default, target, keypad, countdown, round-table forcing
+  // + category seeding) to state -- factored out of selectMode so loadSetup() (below) can put a
+  // saved setup's mode in place the same way, without duplicating this logic or re-triggering
+  // selectMode's own confirm/rounds-clearing (loadSetup handles both of those itself, since
+  // loading a setup also replaces the player list, which selectMode never needs to consider).
+  function applyModeFields(id){
     var m=MODES[id];if(!m)return;
-    // Every game preset carries its own assumptions baked into state -- category-table rows
-    // stamp their label directly onto the marker at creation time (see seedCategories()), life
-    // modes carry a countdown target, dedicated-picker games carry their own keypad state -- none
-    // of which necessarily makes sense once you're playing a DIFFERENT game. Rather than trying
-    // to special-case every specific old-mode/new-mode combination (which is how the Wingspan ->
-    // Wyrmspan bug happened: stale category rows kept their old labels because nothing reset
-    // them), any mode switch with real progress on the board resets the scoreboard clean for the
-    // new game, confirmed first so it's never a surprise. The one exception is leaving Standard,
-    // which carries no mode-specific state worth protecting a confirmation for -- switching out
-    // of it resets just as cleanly, just without asking first.
-    var switchingPreset=state.modeId!==id;
-    var hasProgress=state.rounds.length>0;
-    var leavingStandard=state.modeId==="standard";
-    if(switchingPreset&&hasProgress&&!leavingStandard&&!confirm("Switching games resets the scoreboard — rounds and category scores will be cleared. Continue?"))return;
     if(!state.gameNameCustom){
       state.gameName=m.name||"";gameNameEl.value=state.gameName;
     }
@@ -1208,10 +1243,6 @@
     state.keypadType=m.keypad||"standard";
     state.countdown=!!m.countdown;
     state.modeId=id;
-    if(switchingPreset&&hasProgress){
-      state.rounds=[];
-      state.activeMarkerId=null;
-    }
     // Category-table modes (Wingspan, Wyrmspan) only make sense in round-by-round mode -- each
     // "round" row is really a scoring category, so force the table on rather than leaving it to
     // the player to notice and flip the toggle themselves.
@@ -1233,7 +1264,87 @@
       }
     }
     syncTargetLabel();
+  }
+  function selectMode(id){
+    var m=MODES[id];if(!m)return;
+    // Every game preset carries its own assumptions baked into state -- category-table rows
+    // stamp their label directly onto the marker at creation time (see seedCategories()), life
+    // modes carry a countdown target, dedicated-picker games carry their own keypad state -- none
+    // of which necessarily makes sense once you're playing a DIFFERENT game. Rather than trying
+    // to special-case every specific old-mode/new-mode combination (which is how the Wingspan ->
+    // Wyrmspan bug happened: stale category rows kept their old labels because nothing reset
+    // them), any mode switch with real progress on the board resets the scoreboard clean for the
+    // new game, confirmed first so it's never a surprise. The one exception is leaving Standard,
+    // which carries no mode-specific state worth protecting a confirmation for -- switching out
+    // of it resets just as cleanly, just without asking first.
+    var switchingPreset=state.modeId!==id;
+    var hasProgress=state.rounds.length>0;
+    var leavingStandard=state.modeId==="standard";
+    if(switchingPreset&&hasProgress&&!leavingStandard&&!confirm("Switching games resets the scoreboard — rounds and category scores will be cleared. Continue?"))return;
+    if(switchingPreset&&hasProgress){
+      state.rounds=[];
+      state.activeMarkerId=null;
+    }
+    applyModeFields(id);
     save();syncModeMenu();syncScoreModeMenu();renderAll();closeMenu();
+  }
+  // Saved setups are a personal library of "who's playing what" for a regular group -- deliberately
+  // its own top-level state field rather than folded into anything per-game, so it survives
+  // "Reset everything" the same way state.theme already does (see that handler): it's a standing
+  // preference, not data belonging to any one game.
+  function saveCurrentAsSetup(){
+    var suggested=state.gameName||(MODES[state.modeId]&&MODES[state.modeId].label)||"";
+    var name=prompt("Name this setup:",suggested);
+    if(name===null)return;
+    name=name.trim();
+    if(!name)return;
+    state.savedSetups.push({
+      id:uid(),
+      name:name,
+      modeId:state.modeId,
+      players:state.players.map(function(p){return{name:p.name,color:p.color};})
+    });
+    save();renderSetupsList();
+  }
+  function loadSetup(id){
+    var setup=state.savedSetups.filter(function(s){return s.id===id;})[0];
+    if(!setup||!setup.players.length)return;
+    if(state.rounds.length&&!confirm('Load "'+setup.name+'"? This replaces your current players and clears the scoreboard.'))return;
+    // Re-derives colours the normal way (skip duplicates) rather than trusting saved colours
+    // outright, in case the palette ever changes or two saved players ended up sharing one.
+    state.players=setup.players.map(function(p){return{id:uid(),name:p.name,color:p.color||null};});
+    var used=[];
+    state.players.forEach(function(p){if(!p.color||used.indexOf(p.color)>-1){p.color=PALETTE.filter(function(c){return used.indexOf(c)<0;})[0]||PALETTE[used.length%PALETTE.length];}used.push(p.color);});
+    state.rounds=[];state.activeMarkerId=null;
+    applyModeFields(setup.modeId);
+    save();syncModeMenu();syncScoreModeMenu();renderAll();closeMenu();
+  }
+  function deleteSetup(id){
+    if(!confirm("Delete this saved setup?"))return;
+    state.savedSetups=state.savedSetups.filter(function(s){return s.id!==id;});
+    save();renderSetupsList();
+  }
+  function renderSetupsList(){
+    var list=document.getElementById("setups-list");
+    if(!list)return;
+    if(!state.savedSetups.length){
+      list.innerHTML='<p class="menu-note">No saved setups yet — save your current players to reuse them next time.</p>';
+      return;
+    }
+    list.innerHTML=state.savedSetups.map(function(s){
+      var modeLabel=(MODES[s.modeId]&&MODES[s.modeId].label)||"Standard";
+      var playerNames=s.players.map(function(p){return esc(p.name||"—");}).join(", ")||"No players saved";
+      return '<div class="setup-row">'+
+        '<button class="setup-load" data-setup="'+s.id+'"><b>'+esc(s.name)+'</b><small>'+esc(modeLabel)+' — '+playerNames+'</small></button>'+
+        '<button class="setup-del" data-del-setup="'+s.id+'" aria-label="Delete setup" title="Delete setup">×</button>'+
+      '</div>';
+    }).join("");
+    list.querySelectorAll(".setup-load").forEach(function(btn){
+      btn.addEventListener("click",function(){loadSetup(btn.getAttribute("data-setup"));});
+    });
+    list.querySelectorAll(".setup-del").forEach(function(btn){
+      btn.addEventListener("click",function(){deleteSetup(btn.getAttribute("data-del-setup"));});
+    });
   }
   function syncTargetLabel(){
     var pre=document.getElementById("target-lab-pre"),post=document.getElementById("target-lab-post");
@@ -3059,6 +3170,8 @@
     syncShareUI();
   });
 
+  document.getElementById("save-setup-btn").addEventListener("click",saveCurrentAsSetup);
+  renderSetupsList();
   buildThemeMenu();buildModeMenu();buildScoreModeMenu();applyTheme(currentTheme);syncDisplayToggles();syncTargetLabel();applyScoreMode(state.scoreMode);
   syncShareUI();
   // Landing here from a scanned share QR (see shareJoinUrl()/renderShareQR() above): prefill the
